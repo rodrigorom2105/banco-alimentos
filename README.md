@@ -7,16 +7,16 @@
 
 ## Instalación
 
-​`bash
+```bash
 pnpm install
-​`
+```
 
 ## Desarrollo
 
-​`bash
+```bash
 pnpm dev:backend   # levanta el backend en modo desarrollo
 pnpm dev:mobile    # levanta Expo
-​`
+```
 
 ## Antes de hacer commit
 
@@ -25,9 +25,11 @@ El formato (Prettier) y lint (ESLint) se aplican automáticamente vía Husky en 
 ## Para empezar a contribuir
 
 1. **Instala pnpm globalmente antes de clonar**, si no lo tienes:
-   \`\`\`bash
+
+   ```bash
    npm install -g pnpm
-   \`\`\`
+   ```
+
    El proyecto usa pnpm workspaces para manejar el backend y la app móvil desde un solo repositorio. Usar `npm` o `yarn` en su lugar puede generar un lockfile distinto y romper la instalación de otros.
 
 2. **Instala las extensiones recomendadas de VSCode.** Al abrir el proyecto, VSCode va a mostrar una notificación sugiriendo instalar Prettier, ESLint y EditorConfig (definidas en `.vscode/extensions.json`). Acepta la instalación — sin ellas, tu editor no va a formatear ni marcar errores igual que el resto del equipo mientras escribes.

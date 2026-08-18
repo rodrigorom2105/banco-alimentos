@@ -8,26 +8,26 @@
 
 ## Instalación
 
-\`\`\`bash
+```bash
 git clone https://github.com/tu-usuario/banco-alimentos.git
 cd banco-alimentos
 pnpm install
-\`\`\`
+```
 
 ## Desarrollo
 
-\`\`\`bash
-pnpm dev:backend # levanta el backend
-pnpm dev:mobile # levanta Expo
-\`\`\`
+```bash
+pnpm dev:backend   # levanta el backend
+pnpm dev:mobile    # levanta Expo
+```
 
 ## Convención de ramas
 
 Crea una rama por feature/fix, nunca trabajes directo en `main`:
 
-\`\`\`
+```
 tipo/descripcion-corta
-\`\`\`
+```
 
 Tipos disponibles:
 
@@ -41,9 +41,9 @@ Tipos disponibles:
 
 Usamos [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). El formato es:
 
-\`\`\`
+```
 tipo(alcance opcional): descripción corta en minúsculas
-\`\`\`
+```
 
 Tipos más comunes:
 
@@ -56,12 +56,13 @@ Tipos más comunes:
 - `test:` — agregar o corregir tests
 
 Ejemplos:
-\`\`\`
+
+```
 feat(backend): agregar endpoint de login
 fix(mobile): corregir crash al abrir pantalla de perfil
 chore: actualizar dependencias de expo
 docs: agregar instrucciones de instalación
-\`\`\`
+```
 
 ## Antes de hacer commit
 
@@ -72,15 +73,21 @@ Si el hook de pre-commit falla, lee el error: normalmente es un problema de sint
 ## Flujo de trabajo
 
 1. Crea tu rama desde `main` actualizado:
-   \`\`\`bash
+
+   ```bash
    git checkout main
    git pull
    git checkout -b feature/nombre-descriptivo
-   \`\`\`
+   ```
+
 2. Haz tus cambios y commitea siguiendo la convención de arriba.
+
 3. Sube tu rama y abre un Pull Request hacia `main`:
-   \`\`\`bash
+
+   ```bash
    git push -u origin feature/nombre-descriptivo
-   \`\`\`
+   ```
+
 4. Pide revisión de al menos un compañero antes de mergear.
+
 5. Usa "Squash and merge" al mergear el PR para mantener el historial de `main` limpio.
