@@ -1,0 +1,19 @@
+# Banco de Alimentos
+
+## Requisitos
+- Node.js 20+
+- pnpm (`npm install -g pnpm`)
+
+## Instalación
+​```bash
+pnpm install
+​```
+
+## Desarrollo
+​```bash
+pnpm dev:backend   # levanta el backend en modo desarrollo
+pnpm dev:mobile    # levanta Expo
+​```
+
+## Antes de hacer commit
+El formato (Prettier) y lint (ESLint) se aplican automáticamente vía Husky en cada commit. No necesitas correr nada manual.
