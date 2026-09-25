@@ -9,7 +9,8 @@ export default tseslint.config(
   prettier,
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': 'warn',
+      // Los parámetros con _ se ignoran a propósito (ej. `next` en el manejador de errores de Express).
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },

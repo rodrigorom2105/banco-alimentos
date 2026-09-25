@@ -1,10 +1,24 @@
-node_modules
-dist
-.expo
-.expo-shared
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+
+# Expo
+.expo/
+.expo-shared/
+
+# Logs
 *.log
+
+# Variables de entorno (nunca subir credenciales)
 .env
-.env.local
-.DS_Store 
+.env.*
+!.env.example
+
+# SO
+.DS_Store
+
+# Herramientas locales
 .claude/
-.env 

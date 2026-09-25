@@ -1,0 +1,13 @@
+{
+  // Compilación para producción: genera dist/ sin las pruebas ni sus adaptadores falsos.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // Los errores en producción muestran la línea del .ts original.
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/test-support"]
+}
