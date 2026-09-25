@@ -1,5 +1,18 @@
 # Banco de Alimentos
 
+## Estructura
+
+```
+.
+├── apps/
+│   ├── backend/   # API en Express + TypeScript
+│   └── mobile/    # App en Expo (React Native) + Supabase
+├── packages/      # (futuro) código compartido entre apps
+└── ...            # configuración común: ESLint, Prettier, Husky, EditorConfig
+```
+
+Cada app tiene su propio `README.md` con detalles específicos. La app móvil necesita un archivo `apps/mobile/.env` (usa `apps/mobile/.env.example` como plantilla).
+
 ## Requisitos
 
 - Node.js 20+

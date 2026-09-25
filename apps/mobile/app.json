@@ -1,25 +1,84 @@
 {
   "expo": {
-    "name": "HelloWorld",
-    "slug": "expo-template-blank-typescript",
+    "name": "mi-app",
+    "slug": "mi-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "ios": {
-      "supportsTablet": true
-    },
+    "icon": "./assets/images/icon.png",
+    "scheme": "miapp",
+    "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/adaptive-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "BAMX Conecta usa tu ubicación para mostrarte las campañas y centros de acopio cercanos."
+        }
+      ],
+      [
+        "@react-native-community/datetimepicker",
+        {
+          "android": {
+            "datePicker": {
+              "colorAccent": {
+                "light": "#3E5A52"
+              },
+              "colorControlActivated": {
+                "light": "#3E5A52"
+              },
+              "textColorPrimary": {
+                "light": "#11181C"
+              },
+              "textColorSecondary": {
+                "light": "#717777"
+              },
+              "windowBackground": {
+                "light": "#FFFFFF"
+              }
+            },
+            "timePicker": {
+              "background": {
+                "light": "#FFFFFF"
+              },
+              "headerBackground": {
+                "light": "#3E5A52"
+              },
+              "numbersSelectorColor": {
+                "light": "#3E5A52"
+              },
+              "numbersTextColor": {
+                "light": "#11181C"
+              },
+              "numbersBackgroundColor": {
+                "light": "#E4E4E4"
+              }
+            }
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
     }
   }
 }
