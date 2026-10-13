@@ -11,7 +11,6 @@ import {
   Field,
   FormScreen,
   Input,
-  Select,
   SuccessState,
   type AddressValue,
 } from '@/shared/components';
@@ -19,13 +18,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, spacing } from '@/shared/theme';
 
 import { campaignsApi } from '../api/campaignsApi';
-import { CAMPAIGN_TYPE_LABELS } from '../labels';
-import type { CampaignType, ManagedCampaign } from '../types';
-
-const TYPE_OPTIONS = (Object.keys(CAMPAIGN_TYPE_LABELS) as CampaignType[]).map((type) => ({
-  value: type,
-  label: CAMPAIGN_TYPE_LABELS[type],
-}));
+import type { ManagedCampaign } from '../types';
 
 type Errors = Partial<Record<'name' | 'address' | 'dates' | 'phone' | 'submit', string>>;
 
@@ -37,17 +30,18 @@ const toAddress = (campaign: ManagedCampaign): AddressValue => ({
 });
 
 type Props = {
-  isAdmin: boolean;
   // Si viene, el formulario edita esa campaña en lugar de registrar una nueva.
   campaign?: ManagedCampaign;
 };
 
-// Los centros BAMX (institucionales) solo los crean admins; el resto registra comunitarias.
-export function CampaignForm({ isAdmin, campaign }: Props) {
+// Todo lo que se registra aquí es una campaña comunitaria; la revisión del admin es la que
+// valida. Los centros BAMX (institucionales) los da de alta un admin desde su panel (Fase 5),
+// por eso el tipo ya no se pregunta. Al editar se conserva el tipo que ya tenía la campaña.
+export function CampaignForm({ campaign }: Props) {
   const { user } = useAuth();
   const isEditing = !!campaign;
+  const type = campaign?.type ?? 'community';
   const [name, setName] = useState(campaign?.name ?? '');
-  const [type, setType] = useState<CampaignType>(campaign?.type ?? 'community');
   const [location, setLocation] = useState<AddressValue>(
     campaign ? toAddress(campaign) : EMPTY_ADDRESS,
   );
@@ -115,15 +109,10 @@ export function CampaignForm({ isAdmin, campaign }: Props) {
   };
 
   if (createdId) {
-    const isInstitutional = type === 'institutional';
     return (
       <SuccessState
-        title={isInstitutional ? 'Centro publicado' : 'Campaña registrada'}
-        message={
-          isInstitutional
-            ? 'El centro ya aparece en Explorar.'
-            : 'Quedó pendiente de revisión. BAMX la revisará y te avisaremos cuando se apruebe; mientras tanto no aparece en Explorar.'
-        }
+        title="Campaña registrada"
+        message="Quedó pendiente de revisión. BAMX la revisará y te avisaremos cuando se apruebe; mientras tanto no aparece en Explorar."
         actionLabel="Ver campaña"
         onAction={() =>
           router.replace({ pathname: '/my-campaigns/[id]', params: { id: createdId } })
@@ -141,19 +130,6 @@ export function CampaignForm({ isAdmin, campaign }: Props) {
           onChangeText={setName}
           placeholder="Ej. Campaña de Col. Chapalita"
         />
-      </Field>
-
-      <Field
-        label="Tipo"
-        hint={
-          !isAdmin
-            ? 'Los centros BAMX los registra el personal del banco.'
-            : type === 'institutional'
-              ? 'Los centros BAMX solo los puede publicar una cuenta con rol admin en Supabase.'
-              : undefined
-        }
-      >
-        <Select value={type} options={TYPE_OPTIONS} onChange={setType} disabled={!isAdmin} />
       </Field>
 
       <Field label="Ubicación">
@@ -207,13 +183,7 @@ export function CampaignForm({ isAdmin, campaign }: Props) {
 
       {errors.submit && <Text style={styles.submitError}>{errors.submit}</Text>}
       <Button
-        title={
-          isEditing
-            ? 'Guardar cambios'
-            : type === 'institutional'
-              ? 'Publicar centro'
-              : 'Enviar a revisión'
-        }
+        title={isEditing ? 'Guardar cambios' : 'Enviar a revisión'}
         onPress={submit}
         loading={isSubmitting}
       />
