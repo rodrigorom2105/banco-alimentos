@@ -35,6 +35,13 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "BAMX Conecta necesita acceso a tus fotos para que puedas adjuntar tu fotografía y tu comprobante de domicilio en la solicitud de voluntariado.",
+          "cameraPermission": "BAMX Conecta usa la cámara para tomar tu fotografía de voluntario y la foto de evidencia de cada recolección."
+        }
+      ],
+      [
         "@react-native-community/datetimepicker",
         {
           "android": {

@@ -420,7 +420,20 @@ export type Database = {
     Views: { [_ in never]: never };
     // get_available_donation_requests() y get_request_volunteer() existen, pero su firma no está
     // en el documento; se agregan al regenerar los tipos.
-    Functions: { [_ in never]: never };
+    Functions: {
+      // 07b_apply_as_volunteer.sql: inserta la solicitud y sus municipios en una transacción.
+      apply_as_volunteer: {
+        Args: {
+          p_photo_path: string;
+          p_proof_of_address_path: string;
+          p_available_days: Database['public']['Enums']['weekday'][];
+          p_available_from: string;
+          p_available_to: string;
+          p_municipality_ids: number[];
+        };
+        Returns: string;
+      };
+    };
     Enums: {
       user_role: 'admin';
       volunteer_status: 'pending' | 'approved' | 'rejected' | 'suspended';
