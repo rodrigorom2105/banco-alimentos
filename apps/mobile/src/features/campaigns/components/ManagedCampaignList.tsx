@@ -16,18 +16,10 @@ import { Button, FilterChip, StatusBadge } from '@/shared/components';
 import { colors, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
+import { statusFiltersFor, type StatusFilter } from '../filters';
 import { useManagedCampaigns } from '../hooks/useManagedCampaigns';
 import { CAMPAIGN_STATUS } from '../labels';
-import type { CampaignStatus, ManagedCampaign } from '../types';
-
-const STATUS_FILTERS: (CampaignStatus | null)[] = [
-  null,
-  'pending',
-  'approved',
-  'active',
-  'finished',
-  'rejected',
-];
+import type { ManagedCampaign } from '../types';
 
 function CampaignRow({ campaign }: { campaign: ManagedCampaign }) {
   const status = CAMPAIGN_STATUS[campaign.status];
@@ -59,14 +51,18 @@ export function ManagedCampaignList({ isAdmin }: { isAdmin: boolean }) {
     isAdmin ? null : (user?.id ?? null),
     !!user,
   );
-  const [statusFilter, setStatusFilter] = useState<CampaignStatus | null>(
-    isAdmin ? 'pending' : null,
-  );
+  // El admin abre en su bandeja de pendientes; el organizador, en todas las suyas.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(isAdmin ? 'pending' : null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const filters = useMemo(() => statusFiltersFor(campaigns, isAdmin), [campaigns, isAdmin]);
+  // Si el estado seleccionado desaparece (p. ej. se aprobó la única campaña pendiente), se
+  // cae a "Todas" en vez de mostrar una lista vacía con un chip que ya no existe.
+  const activeFilter = filters.includes(statusFilter) ? statusFilter : null;
+
   const visible = useMemo(
-    () => (statusFilter ? campaigns.filter((c) => c.status === statusFilter) : campaigns),
-    [campaigns, statusFilter],
+    () => (activeFilter ? campaigns.filter((c) => c.status === activeFilter) : campaigns),
+    [campaigns, activeFilter],
   );
 
   const refresh = async () => {
@@ -90,17 +86,17 @@ export function ManagedCampaignList({ isAdmin }: { isAdmin: boolean }) {
       ListHeaderComponent={
         <View style={styles.header}>
           <Button title="+ Registrar campaña" onPress={() => router.push('/my-campaigns/new')} />
-          {isAdmin && (
+          {filters.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chips}
             >
-              {STATUS_FILTERS.map((status) => (
+              {filters.map((status) => (
                 <FilterChip
                   key={status ?? 'all'}
                   label={status ? CAMPAIGN_STATUS[status].label : 'Todas'}
-                  selected={statusFilter === status}
+                  selected={activeFilter === status}
                   onPress={() => setStatusFilter(status)}
                 />
               ))}
@@ -112,9 +108,11 @@ export function ManagedCampaignList({ isAdmin }: { isAdmin: boolean }) {
         <Text style={styles.empty}>
           {error
             ? `No se pudieron cargar las campañas: ${error}`
-            : isAdmin
+            : activeFilter
               ? 'No hay campañas con este estado.'
-              : 'Aún no has registrado ninguna campaña.'}
+              : isAdmin
+                ? 'Todavía no hay campañas registradas.'
+                : 'Aún no has registrado ninguna campaña.'}
         </Text>
       }
     />

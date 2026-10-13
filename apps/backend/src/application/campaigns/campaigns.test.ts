@@ -92,6 +92,22 @@ describe('FinishCampaign', () => {
     });
   });
 
+  // Cancelar una campaña aprobada que todavía no empieza. La base lo permite desde el SQL
+  // 05_campaign_status_transitions (antes solo aceptaba active -> finished y esto daba un 500).
+  it('el organizador puede finalizar su campaña aprobada que aún no empieza', async () => {
+    const repo = new InMemoryCampaignRepository([makeCampaign({ status: 'approved' })]);
+    await expect(new FinishCampaign(repo).execute(organizer, CAMPAIGN_ID)).resolves.toEqual({
+      status: 'finished',
+    });
+  });
+
+  it('no se finaliza una campaña ya finalizada', async () => {
+    const repo = new InMemoryCampaignRepository([makeCampaign({ status: 'finished' })]);
+    await expect(new FinishCampaign(repo).execute(organizer, CAMPAIGN_ID)).rejects.toBeInstanceOf(
+      ConflictError,
+    );
+  });
+
   it('otro usuario no puede finalizarla', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign({ status: 'active' })]);
     await expect(new FinishCampaign(repo).execute(stranger, CAMPAIGN_ID)).rejects.toBeInstanceOf(
