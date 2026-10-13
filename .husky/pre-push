@@ -1,0 +1,2 @@
+pnpm -r typecheck
+pnpm --filter backend test

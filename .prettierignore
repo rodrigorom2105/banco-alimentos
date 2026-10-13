@@ -2,3 +2,5 @@ node_modules
 dist
 .expo
 build
+pnpm-lock.yaml
+expo-env.d.ts

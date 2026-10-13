@@ -1,6 +1,6 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 # node_modules plano, como npm. Lo recomienda Expo para proyectos de React Native en pnpm:
 # varias librerías (p. ej. el plugin de Babel de react-native-worklets) hacen require de
