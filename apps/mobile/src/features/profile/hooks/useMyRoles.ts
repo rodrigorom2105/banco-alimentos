@@ -19,11 +19,14 @@ export function useMyRoles() {
   const { data, isLoading, error, reload } = useFocusQuery(fetcher);
   const roles = data ?? NO_ROLES;
 
+  // Modo de prueba: habilita las pantallas de admin y voluntario (ver devFlags). Solo con
+  // sesión; un invitado nunca debe ver esas opciones, ni siquiera en desarrollo.
+  const devRoles = DEV_ALL_ROLES && !!userId;
+
   return {
     ...roles,
-    // Modo de prueba: habilita las pantallas de admin y voluntario (ver devFlags).
-    isAdmin: DEV_ALL_ROLES || roles.isAdmin,
-    isVolunteer: DEV_ALL_ROLES || roles.volunteerStatus === 'approved',
+    isAdmin: devRoles || roles.isAdmin,
+    isVolunteer: devRoles || roles.volunteerStatus === 'approved',
     isLoading,
     error,
     reload,

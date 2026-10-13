@@ -84,7 +84,7 @@ export function ManageCampaign({ campaign, supportRequests, isAdmin, onChanged }
   const canEdit = (isOwner || isAdmin) && (status === 'pending' || isLive);
   const statusInfo = CAMPAIGN_STATUS[status];
 
-  const runAction = async (action: 'approve' | 'finish', task: () => Promise<void>) => {
+  const runAction = async (action: 'approve' | 'finish', task: () => Promise<unknown>) => {
     setBusy(action);
     setError(null);
     try {
@@ -97,8 +97,7 @@ export function ManageCampaign({ campaign, supportRequests, isAdmin, onChanged }
     }
   };
 
-  const approve = () =>
-    runAction('approve', () => campaignsApi.setStatus(campaign.id, user!.id, 'approved'));
+  const approve = () => runAction('approve', () => campaignsApi.approve(campaign.id));
 
   const finish = async () => {
     const ok = await confirm(
@@ -106,7 +105,7 @@ export function ManageCampaign({ campaign, supportRequests, isAdmin, onChanged }
       'Dejará de aparecer en Explorar y no se puede deshacer. ¿La campaña realmente terminó?',
       'Finalizar',
     );
-    if (ok) runAction('finish', () => campaignsApi.setStatus(campaign.id, user!.id, 'finished'));
+    if (ok) runAction('finish', () => campaignsApi.finish(campaign.id));
   };
 
   return (
@@ -259,7 +258,7 @@ export function ManageCampaign({ campaign, supportRequests, isAdmin, onChanged }
         submitLabel="Rechazar"
         onClose={() => setIsRejecting(false)}
         onSubmit={async (reason) => {
-          await campaignsApi.setStatus(campaign.id, user!.id, 'rejected', reason);
+          await campaignsApi.reject(campaign.id, reason);
           onChanged();
         }}
       />

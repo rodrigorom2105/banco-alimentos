@@ -2,6 +2,13 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# node_modules plano, como npm. Lo recomienda Expo para proyectos de React Native en pnpm:
+# varias librerías (p. ej. el plugin de Babel de react-native-worklets) hacen require de
+# paquetes que no declaran como dependencia suya, y con el aislamiento de pnpm ese require
+# no encuentra nada ("Cannot find module '@babel/generator'" al empaquetar).
+# Al cambiar esto hay que borrar node_modules y reinstalar.
+nodeLinker: hoisted
+
 allowBuilds:
   unrs-resolver: false
 
