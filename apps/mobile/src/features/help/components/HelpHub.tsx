@@ -20,8 +20,11 @@ const VOLUNTEER_STATUS_TEXT: Record<string, string> = {
 // Qué opciones ve cada quien:
 // - Registrar campaña, Ser voluntario y Donar desde casa: todos, incluso sin sesión (al
 //   tocarlas se pide iniciar sesión).
-// - Mi campaña y Mi voluntariado: solo con sesión, porque muestran datos propios.
-// (Los detalles que faltan —Mi campaña según las campañas propias, Panel BAMX— son de la Fase 6.)
+// - Mis campañas y Mi voluntariado: solo con sesión, porque muestran datos propios.
+//
+// Ayudar es "cómo yo apoyo a BAMX", así que es IGUAL para todos, admins incluidos: la
+// revisión de campañas y voluntarios vive en el Panel BAMX, al que se entra desde Inicio.
+// (Falta afinar "Mis campañas" según las campañas propias: Fase 6.)
 type RolesInput = Pick<
   ReturnType<typeof useMyRoles>,
   'isAdmin' | 'isVolunteer' | 'volunteerStatus'
@@ -41,15 +44,14 @@ function optionsFor({ isSignedIn, isAdmin, isVolunteer, volunteerStatus }: Roles
   });
 
   // Con sesión siempre: si no, quien registra una campaña no tendría cómo volver a verla.
-  // En F6 se afina para mostrarla solo cuando tiene campañas, y con el nombre de la campaña.
+  // Para un admin dice lo mismo que para cualquiera, porque aquí ve SUS campañas; la
+  // revisión de todas está en el Panel BAMX.
   if (isSignedIn) {
     options.push({
       key: 'my-campaigns',
       icon: 'clipboard-list-outline',
-      title: isAdmin ? 'Campañas' : 'Mis campañas',
-      description: isAdmin
-        ? 'Revisa, aprueba y administra todas las campañas'
-        : 'Da seguimiento a las campañas que registraste',
+      title: 'Mis campañas',
+      description: 'Da seguimiento a las campañas que registraste',
       href: '/my-campaigns',
     });
   }

@@ -17,6 +17,14 @@ const SIGNED_IN_SCREENS = [
   'my-campaigns/[id]/edit',
   'volunteer/apply',
   'volunteer/dashboard',
+  // Panel de administrador. Además de estar protegidas por sesión, cada pantalla esconde su
+  // contenido a quien no es admin (AdminOnly) y el backend responde 403 a sus endpoints.
+  'admin/index',
+  'admin/campaigns',
+  'admin/support',
+  'admin/volunteers/index',
+  'admin/volunteers/[id]',
+  'admin/centers/new',
 ];
 
 // La app abre en las pestañas, no en el carrusel: un invitado entra directo a explorar.

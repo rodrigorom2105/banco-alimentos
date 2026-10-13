@@ -4,7 +4,9 @@ import type { Container } from '../../container';
 import { authenticate } from './middlewares/authenticate';
 import { errorHandler } from './middlewares/errorHandler';
 import { campaignsRoutes } from './routes/campaigns.routes';
+import { supportRoutes } from './routes/support.routes';
 import { usersRoutes } from './routes/users.routes';
+import { volunteersRoutes } from './routes/volunteers.routes';
 
 // CORS mínimo: la app móvil nativa no lo necesita, pero Expo web sí.
 function cors(allowedOrigins: string[]) {
@@ -42,6 +44,8 @@ export function createApp(container: Container) {
   // Todo lo que sigue requiere sesión de Supabase.
   app.use(authenticate(container.auth, container.repositories.users));
   app.use(campaignsRoutes(container));
+  app.use(volunteersRoutes(container));
+  app.use(supportRoutes(container));
   app.use(usersRoutes(container));
 
   app.use((_req, res) => {

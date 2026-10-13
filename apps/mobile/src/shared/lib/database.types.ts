@@ -457,7 +457,11 @@ export type Database = {
         | 'pickup_on_the_way'
         | 'pickup_cancelled'
         | 'pickup_delivered'
-        | 'donation_unassigned';
+        | 'donation_unassigned'
+        // Agregados en 07c_support_notification_types.sql.
+        | 'support_approved'
+        | 'support_rejected'
+        | 'support_delivered';
     };
     CompositeTypes: { [_ in never]: never };
   };

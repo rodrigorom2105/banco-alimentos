@@ -1,6 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Campaign, CampaignReview, CampaignStatus } from '../../domain/campaigns/Campaign';
+import type {
+  Campaign,
+  CampaignReview,
+  CampaignStatus,
+  NewInstitutionalCampaign,
+} from '../../domain/campaigns/Campaign';
 import type { CampaignRepository } from '../../domain/campaigns/CampaignRepository';
 
 const COLUMNS =
@@ -68,5 +73,29 @@ export class SupabaseCampaignRepository implements CampaignRepository {
   async markFinished(id: string) {
     const { error } = await this.db.from('campaigns').update({ status: 'finished' }).eq('id', id);
     if (error) throw error;
+  }
+
+  async createInstitutional(campaign: NewInstitutionalCampaign) {
+    // No se manda `status`: el trigger pone 'active' para los centros institucionales.
+    // Tampoco `organizer_id`: un centro es de BAMX, no de una persona.
+    const { data, error } = await this.db
+      .from('campaigns')
+      .insert({
+        type: 'institutional',
+        name: campaign.name,
+        description: campaign.description,
+        address: campaign.address,
+        municipality_id: campaign.municipalityId,
+        latitude: campaign.latitude,
+        longitude: campaign.longitude,
+        start_date: campaign.startDate,
+        end_date: campaign.endDate,
+        schedule: campaign.schedule,
+        contact_phone: campaign.contactPhone,
+      })
+      .select('id')
+      .single<{ id: string }>();
+    if (error) throw error;
+    return data.id;
   }
 }

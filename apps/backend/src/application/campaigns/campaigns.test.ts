@@ -13,6 +13,7 @@ import {
   fixedClock,
   makeCampaign,
 } from '../../test-support/inMemory';
+import { CreateInstitutionalCampaign } from './createInstitutionalCampaign';
 import { FinishCampaign } from './finishCampaign';
 import { ApproveCampaign, ListCampaignsForReview, RejectCampaign } from './reviewCampaign';
 
@@ -169,6 +170,70 @@ describe('FinishCampaign', () => {
     await expect(new FinishCampaign(repo).execute(organizer, CAMPAIGN_ID)).rejects.toBeInstanceOf(
       ConflictError,
     );
+  });
+});
+
+describe('CreateInstitutionalCampaign', () => {
+  const center = {
+    name: '  Centro BAMX Zapopan ',
+    description: null,
+    address: 'Av. Patria 123',
+    municipalityId: 2,
+    latitude: 20.72,
+    longitude: -103.41,
+    startDate: null,
+    endDate: null,
+    schedule: 'Lun a Vie 9:00-17:00',
+    contactPhone: null,
+  };
+
+  it('lo crea sin organizador y la base lo deja activo', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    const { id } = await new CreateInstitutionalCampaign(repo).execute(admin, center);
+
+    expect(repo.created[0].name).toBe('Centro BAMX Zapopan'); // recortado por el dominio
+    const created = await repo.findById(id);
+    expect(created).toMatchObject({ type: 'institutional', status: 'active', organizerId: null });
+  });
+
+  // end_date en null = punto permanente, por eso las fechas son opcionales.
+  it('acepta un centro permanente, sin fechas', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    const { id } = await new CreateInstitutionalCampaign(repo).execute(admin, center);
+    expect((await repo.findById(id))?.endDate).toBeNull();
+  });
+
+  it('exige nombre', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    await expect(
+      new CreateInstitutionalCampaign(repo).execute(admin, { ...center, name: '   ' }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('valida que las coordenadas existan en el planeta', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    await expect(
+      new CreateInstitutionalCampaign(repo).execute(admin, { ...center, latitude: 120 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('rechaza una fecha de fin anterior a la de inicio', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    await expect(
+      new CreateInstitutionalCampaign(repo).execute(admin, {
+        ...center,
+        startDate: '2026-10-10',
+        endDate: '2026-10-01',
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('solo admins', async () => {
+    const repo = new InMemoryCampaignRepository([]);
+    await expect(
+      new CreateInstitutionalCampaign(repo).execute(organizer, center),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(repo.created).toHaveLength(0);
   });
 });
 

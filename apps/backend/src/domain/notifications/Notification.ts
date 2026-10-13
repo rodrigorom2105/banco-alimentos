@@ -12,7 +12,11 @@ export type NotificationType =
   | 'pickup_on_the_way'
   | 'pickup_cancelled'
   | 'pickup_delivered'
-  | 'donation_unassigned';
+  | 'donation_unassigned'
+  // Agregados al enum de la base en 07c_support_notification_types.sql.
+  | 'support_approved'
+  | 'support_rejected'
+  | 'support_delivered';
 
 // Un aviso listo para guardarse. `data` lleva los ids que la app necesita para saber a qué
 // pantalla navegar al tocarlo; son strings porque viajan como JSON.
@@ -46,5 +50,55 @@ export function campaignRejected(campaign: Campaign, reason: string): NewNotific
     title: 'Tu campaña no fue aprobada',
     body: `${campaign.name}: ${reason}`,
     data: { campaignId: campaign.id },
+  };
+}
+
+export function volunteerApproved(): NewNotification {
+  return {
+    type: 'volunteer_approved',
+    title: '¡Ya eres voluntario de BAMX!',
+    body: 'Tu solicitud fue aprobada. Te vamos a avisar cuando tengas una recolección asignada.',
+    data: {},
+  };
+}
+
+export function volunteerRejected(reason: string): NewNotification {
+  return {
+    type: 'volunteer_rejected',
+    title: 'Tu solicitud de voluntariado no fue aprobada',
+    body: reason,
+    data: {},
+  };
+}
+
+export function volunteerSuspended(reason: string): NewNotification {
+  return {
+    type: 'volunteer_suspended',
+    title: 'Tu voluntariado está suspendido',
+    body: `${reason} Si tienes dudas, comunícate con BAMX.`,
+    data: {},
+  };
+}
+
+// Solicitudes de apoyo de una campaña comunitaria (contenedores, difusión, material).
+export function supportResponded(
+  support: { id: string; campaignId: string },
+  approved: boolean,
+  message: string | null,
+): NewNotification {
+  return {
+    type: approved ? 'support_approved' : 'support_rejected',
+    title: approved ? 'BAMX aprobó tu solicitud de apoyo' : 'BAMX no aprobó tu solicitud de apoyo',
+    body: message ?? (approved ? 'Pronto nos pondremos en contacto.' : 'Sin comentarios.'),
+    data: { campaignId: support.campaignId, supportRequestId: support.id },
+  };
+}
+
+export function supportDelivered(support: { id: string; campaignId: string }): NewNotification {
+  return {
+    type: 'support_delivered',
+    title: 'Tu apoyo fue entregado',
+    body: 'BAMX marcó como entregado el apoyo que solicitaste.',
+    data: { campaignId: support.campaignId, supportRequestId: support.id },
   };
 }

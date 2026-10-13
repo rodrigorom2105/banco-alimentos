@@ -27,11 +27,16 @@ Las dependencias apuntan hacia adentro: `interfaces → application → domain`.
 ```
 src/
 ├── domain/            # Reglas de negocio puras. No importa Express ni Supabase.
-│   ├── campaigns/     # Entidad Campaign, transiciones de estado, CampaignRepository (puerto)
+│   ├── campaigns/     # Entidad Campaign, transiciones de estado, Centros BAMX
+│   ├── volunteers/    # Entidad Volunteer: aprobar, rechazar, suspender
+│   ├── support/       # Solicitudes de apoyo: responder y entregar
+│   ├── notifications/ # Textos de cada aviso y el puerto Notifier
 │   ├── users/         # UserRepository (puerto) y roles
 │   └── shared/        # Errores de dominio (NotFound, Forbidden, Conflict…)
 ├── application/       # Casos de uso: validan permisos y orquestan el dominio
-│   ├── campaigns/     # Aprobar, rechazar, listar para revisión, finalizar
+│   ├── campaigns/     # Aprobar, rechazar, listar para revisión, finalizar, crear centro
+│   ├── volunteers/    # Revisión de solicitudes de voluntariado
+│   ├── support/       # Revisión de solicitudes de apoyo
 │   ├── users/         # Asignar rol admin
 │   └── ports.ts       # Actor, AuthService, Clock
 ├── infrastructure/    # Adaptadores concretos
@@ -52,13 +57,21 @@ src/
 
 Todos, excepto `/health`, requieren `Authorization: Bearer <access token de Supabase>` (el que ya tiene la app en `supabase.auth.getSession()`).
 
-| Método | Ruta                              | Quién               | Qué hace                                                |
-| ------ | --------------------------------- | ------------------- | ------------------------------------------------------- |
-| GET    | `/health`                         | público             | Estado del servidor                                     |
-| GET    | `/admin/campaigns?status=pending` | admin               | Lista campañas (filtro opcional por estado)             |
-| POST   | `/admin/campaigns/:id/approve`    | admin               | Aprueba; pasa a `active` si su fecha de inicio ya llegó |
-| POST   | `/admin/campaigns/:id/reject`     | admin               | Rechaza. Body: `{ "reason": "..." }`                    |
-| POST   | `/campaigns/:id/finish`           | organizador o admin | Finaliza una campaña aprobada o activa                  |
-| POST   | `/admin/admins`                   | admin               | Asigna rol admin. Body: `{ "email": "..." }`            |
+| Método | Ruta                                  | Quién               | Qué hace                                                |
+| ------ | ------------------------------------- | ------------------- | ------------------------------------------------------- |
+| GET    | `/health`                             | público             | Estado del servidor                                     |
+| GET    | `/admin/campaigns?status=pending`     | admin               | Lista campañas (filtro opcional por estado)             |
+| POST   | `/admin/campaigns/:id/approve`        | admin               | Aprueba; pasa a `active` si su fecha de inicio ya llegó |
+| POST   | `/admin/campaigns/:id/reject`         | admin               | Rechaza. Body: `{ "reason": "..." }`                    |
+| POST   | `/campaigns/:id/finish`               | organizador o admin | Finaliza una campaña aprobada o activa                  |
+| POST   | `/admin/campaigns`                    | admin               | Registra un Centro BAMX (nace `active`, sin revisión)   |
+| GET    | `/admin/volunteers?status=`           | admin               | Lista solicitudes de voluntariado                       |
+| POST   | `/admin/volunteers/:id/approve`       | admin               | Aprueba (exige al menos un municipio)                   |
+| POST   | `/admin/volunteers/:id/reject`        | admin               | Rechaza. Body: `{ "reason": "..." }`                    |
+| POST   | `/admin/volunteers/:id/suspend`       | admin               | Suspende a un aprobado. Body: `{ "reason": "..." }`     |
+| GET    | `/admin/support-requests?status=`     | admin               | Lista solicitudes de apoyo de las campañas              |
+| POST   | `/admin/support-requests/:id/respond` | admin               | Body: `{ "approved": bool, "message": "..." }`          |
+| POST   | `/admin/support-requests/:id/deliver` | admin               | Marca un apoyo aprobado como entregado                  |
+| POST   | `/admin/admins`                       | admin               | Asigna rol admin. Body: `{ "email": "..." }`            |
 
 Errores: `{ "error": "CODIGO", "message": "..." }` con 400 (datos inválidos), 401 (sin sesión), 403 (sin permiso), 404 (no existe) o 409 (acción inválida para el estado actual).

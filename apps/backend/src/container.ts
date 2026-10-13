@@ -1,3 +1,4 @@
+import { CreateInstitutionalCampaign } from './application/campaigns/createInstitutionalCampaign';
 import { FinishCampaign } from './application/campaigns/finishCampaign';
 import {
   ApproveCampaign,
@@ -5,20 +6,37 @@ import {
   RejectCampaign,
 } from './application/campaigns/reviewCampaign';
 import type { AuthService, Clock } from './application/ports';
+import {
+  DeliverSupportRequest,
+  ListSupportRequestsForReview,
+  RespondSupportRequest,
+} from './application/support/reviewSupportRequest';
 import { GrantAdminRole } from './application/users/grantAdminRole';
+import {
+  ApproveVolunteer,
+  ListVolunteersForReview,
+  RejectVolunteer,
+  SuspendVolunteer,
+} from './application/volunteers/reviewVolunteer';
 import type { CampaignRepository } from './domain/campaigns/CampaignRepository';
 import type { Notifier } from './domain/notifications/Notifier';
+import type { SupportRequestRepository } from './domain/support/SupportRequestRepository';
 import type { UserRepository } from './domain/users/UserRepository';
+import type { VolunteerRepository } from './domain/volunteers/VolunteerRepository';
 import { systemClock } from './infrastructure/clock';
 import type { Env } from './infrastructure/config/env';
 import { createSupabaseAdmin } from './infrastructure/supabase/client';
 import { SupabaseAuthService } from './infrastructure/supabase/SupabaseAuthService';
 import { SupabaseCampaignRepository } from './infrastructure/supabase/SupabaseCampaignRepository';
 import { SupabaseNotifier } from './infrastructure/supabase/SupabaseNotifier';
+import { SupabaseSupportRequestRepository } from './infrastructure/supabase/SupabaseSupportRequestRepository';
 import { SupabaseUserRepository } from './infrastructure/supabase/SupabaseUserRepository';
+import { SupabaseVolunteerRepository } from './infrastructure/supabase/SupabaseVolunteerRepository';
 
 type Adapters = {
   campaigns: CampaignRepository;
+  volunteers: VolunteerRepository;
+  support: SupportRequestRepository;
   users: UserRepository;
   auth: AuthService;
   clock: Clock;
@@ -31,6 +49,8 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
   const db = createSupabaseAdmin(env);
   const adapters: Adapters = {
     campaigns: new SupabaseCampaignRepository(db),
+    volunteers: new SupabaseVolunteerRepository(db),
+    support: new SupabaseSupportRequestRepository(db),
     users: new SupabaseUserRepository(db),
     auth: new SupabaseAuthService(db),
     clock: systemClock,
@@ -41,12 +61,25 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
   return {
     env,
     auth: adapters.auth,
-    repositories: { campaigns: adapters.campaigns, users: adapters.users },
+    repositories: {
+      campaigns: adapters.campaigns,
+      volunteers: adapters.volunteers,
+      support: adapters.support,
+      users: adapters.users,
+    },
     useCases: {
       listCampaignsForReview: new ListCampaignsForReview(adapters.campaigns),
       approveCampaign: new ApproveCampaign(adapters.campaigns, adapters.clock, adapters.notifier),
       rejectCampaign: new RejectCampaign(adapters.campaigns, adapters.notifier),
       finishCampaign: new FinishCampaign(adapters.campaigns),
+      createInstitutionalCampaign: new CreateInstitutionalCampaign(adapters.campaigns),
+      listVolunteersForReview: new ListVolunteersForReview(adapters.volunteers),
+      approveVolunteer: new ApproveVolunteer(adapters.volunteers, adapters.notifier),
+      rejectVolunteer: new RejectVolunteer(adapters.volunteers, adapters.notifier),
+      suspendVolunteer: new SuspendVolunteer(adapters.volunteers, adapters.notifier),
+      listSupportRequestsForReview: new ListSupportRequestsForReview(adapters.support),
+      respondSupportRequest: new RespondSupportRequest(adapters.support, adapters.notifier),
+      deliverSupportRequest: new DeliverSupportRequest(adapters.support, adapters.notifier),
       grantAdminRole: new GrantAdminRole(adapters.users),
     },
   };
