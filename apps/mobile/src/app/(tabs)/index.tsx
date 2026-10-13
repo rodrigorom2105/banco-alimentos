@@ -4,10 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HomeCard, NotificationBell } from '@/features/home';
 import { useMyProfile } from '@/features/profile';
+import { useAuth } from '@/providers';
+import { useRequireAuth } from '@/shared/hooks';
 import { colors, spacing } from '@/shared/theme';
 
 export default function HomeScreen() {
+  const { session } = useAuth();
   const { profile } = useMyProfile();
+  const requireAuth = useRequireAuth();
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : '';
 
   return (
@@ -15,11 +19,12 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hola,</Text>
-            <Text style={styles.name}>{fullName}</Text>
+            {/* Sin sesión no hay nombre que saludar ni notificaciones que mostrar. */}
+            <Text style={styles.greeting}>{session ? 'Hola,' : 'Bienvenido a'}</Text>
+            <Text style={styles.name}>{session ? fullName : 'BAMX Conecta'}</Text>
           </View>
           {/* TODO: conectar el contador cuando exista la tabla de notificaciones */}
-          <NotificationBell count={0} />
+          {session && <NotificationBell count={0} />}
         </View>
 
         <View style={styles.cards}>
@@ -36,7 +41,7 @@ export default function HomeScreen() {
           <HomeCard
             title="Donar desde casa"
             description="Solicita una recolección a domicilio"
-            onPress={() => router.push('/donation/new')}
+            onPress={() => requireAuth('/donation/new')}
           />
         </View>
       </ScrollView>

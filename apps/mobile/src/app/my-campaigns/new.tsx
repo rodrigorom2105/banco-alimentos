@@ -2,21 +2,18 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import { CampaignForm } from '@/features/campaigns';
 import { useMyRoles } from '@/features/profile';
-import { Placeholder, Screen } from '@/shared/components';
+import { Screen } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 export default function NewCampaignScreen() {
-  const { isAdmin, isVolunteer, isLoading } = useMyRoles();
+  // Cualquier usuario con sesión puede registrar una campaña; la revisión del admin es la que
+  // valida (decisión 3 del plan). El rol solo sirve para saber si el formulario va en modo admin.
+  const { isAdmin, isLoading } = useMyRoles();
 
   return (
     <Screen title="Nueva campaña">
       {isLoading ? (
         <ActivityIndicator style={styles.loading} color={colors.primary} />
-      ) : !isAdmin && !isVolunteer ? (
-        <Placeholder
-          title="Solo para voluntarios"
-          message="Para registrar una campaña primero debes ser voluntario aprobado."
-        />
       ) : (
         <CampaignForm isAdmin={isAdmin} />
       )}
