@@ -1,3 +1,4 @@
+import { apiRequest } from '@/shared/lib/api';
 import { supabase } from '@/shared/lib/supabase';
 
 import type {
@@ -16,6 +17,9 @@ const CAMPAIGN_COLUMNS = `
   municipality:municipalities(id, name)
 `;
 const MANAGED_COLUMNS = `${CAMPAIGN_COLUMNS}, status, organizer_id, rejection_reason`;
+
+// Respuesta del backend al cambiar el estado de una campaña.
+type StatusResult = { status: CampaignStatus };
 
 export const campaignsApi = {
   // Según el esquema solo las `active` aparecen en el mapa (y son públicas).
@@ -77,26 +81,20 @@ export const campaignsApi = {
     if (error) throw error;
   },
 
-  // Aprobar, rechazar o finalizar. El esquema reserva los cambios de estado a admins.
-  async setStatus(
-    id: string,
-    reviewerId: string,
-    status: CampaignStatus,
-    rejectionReason: string | null = null,
-  ) {
-    const review =
-      status === 'finished'
-        ? {}
-        : {
-            reviewed_by: reviewerId,
-            reviewed_at: new Date().toISOString(),
-            rejection_reason: rejectionReason,
-          };
-    const { error } = await supabase
-      .from('campaigns')
-      .update({ status, ...review })
-      .eq('id', id);
-    if (error) throw error;
+  // Los cambios de estado pasan por el backend: RLS no los permite desde la app y ahí viven
+  // las reglas (ej. al aprobar, pasa directo a `active` si la fecha de inicio ya llegó).
+  // Cada uno devuelve el estado con el que quedó la campaña.
+  approve(id: string) {
+    return apiRequest<StatusResult>('POST', `/admin/campaigns/${id}/approve`);
+  },
+
+  reject(id: string, reason: string) {
+    return apiRequest<StatusResult>('POST', `/admin/campaigns/${id}/reject`, { reason });
+  },
+
+  // El organizador finaliza su propia campaña; un admin puede finalizar cualquiera.
+  finish(id: string) {
+    return apiRequest<StatusResult>('POST', `/campaigns/${id}/finish`);
   },
 
   async listSupportRequests(campaignId: string): Promise<SupportRequest[]> {

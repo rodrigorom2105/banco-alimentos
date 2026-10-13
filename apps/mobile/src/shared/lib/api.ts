@@ -6,6 +6,9 @@ const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
 type Method = 'GET' | 'POST' | 'PATCH';
 
+// Sin límite, una IP equivocada deja la petición colgada hasta que el sistema se rinde (minutos).
+const TIMEOUT_MS = 15_000;
+
 // Error del backend. Conserva el código ({ error, message } del errorHandler) para que la UI
 // pueda distinguir casos (FORBIDDEN, CONFLICT…) sin tener que leer el texto del mensaje.
 export class ApiError extends Error {
@@ -59,27 +62,36 @@ export async function apiRequest<T>(method: Method, path: string, body?: unknown
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
-  let response: Response;
-  try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-  } catch {
-    // fetch solo lanza cuando no hubo respuesta: servidor apagado, IP equivocada o sin red.
-    throw new ApiError(
-      'NETWORK_ERROR',
-      `No se pudo conectar con el servidor de BAMX (${BASE_URL}). Revisa que esté encendido y que el celular esté en la misma red Wi-Fi.`,
-      0,
-    );
-  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  // 204 (sin contenido) y las respuestas que no son JSON no se pueden parsear.
-  const payload = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) throw readError(payload, response.status);
-  return payload as T;
+  try {
+    let response: Response;
+    try {
+      response = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch {
+      // fetch solo lanza cuando no hubo respuesta: servidor apagado, IP equivocada, sin red
+      // o se agotó el tiempo de espera.
+      throw new ApiError(
+        controller.signal.aborted ? 'TIMEOUT' : 'NETWORK_ERROR',
+        `No se pudo conectar con el servidor de BAMX (${BASE_URL}). Revisa que esté encendido y que el celular esté en la misma red Wi-Fi.`,
+        0,
+      );
+    }
+
+    // 204 (sin contenido) y las respuestas que no son JSON no se pueden parsear.
+    const payload = response.status === 204 ? null : await response.json().catch(() => null);
+    if (!response.ok) throw readError(payload, response.status);
+    return payload as T;
+  } finally {
+    clearTimeout(timeout);
+  }
 }

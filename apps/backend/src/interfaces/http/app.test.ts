@@ -40,6 +40,7 @@ async function start() {
       headers: {
         'content-type': 'application/json',
         ...(init.token ? { authorization: `Bearer ${init.token}` } : {}),
+        ...(init.headers as Record<string, string> | undefined),
       },
     });
   return { call, campaigns };
@@ -55,6 +56,18 @@ describe('API HTTP', () => {
     const res = await call('/health');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: 'ok' });
+  });
+
+  // Expo web manda un preflight OPTIONS (sin token) antes de cada petición con Authorization.
+  it('responde el preflight de CORS con los métodos que usa la app', async () => {
+    const { call } = await start();
+    const res = await call(`/campaigns/${CAMPAIGN_ID}/finish`, {
+      method: 'OPTIONS',
+      headers: { origin: 'http://localhost:8081' },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:8081');
+    expect(res.headers.get('access-control-allow-methods')).toContain('PATCH');
   });
 
   it('sin token responde 401', async () => {
