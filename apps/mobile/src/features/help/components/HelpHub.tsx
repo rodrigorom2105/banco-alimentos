@@ -1,7 +1,9 @@
-import { router, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { useMyRoles } from '@/features/profile';
+import { useAuth } from '@/providers';
+import { useRequireAuth } from '@/shared/hooks';
 import { DEV_ALL_ROLES } from '@/shared/lib/devFlags';
 import { colors, spacing } from '@/shared/theme';
 
@@ -15,41 +17,44 @@ const VOLUNTEER_STATUS_TEXT: Record<string, string> = {
   suspended: 'Tu voluntariado está suspendido',
 };
 
-// Qué opciones ve cada rol:
-// - Registrar campaña / Mi campaña: voluntarios aprobados y admins.
-// - Ser voluntario: donadores (quien aún no es voluntario ni admin).
-// - Mi voluntariado: voluntarios aprobados.
-// - Donar desde casa: todos.
+// Qué opciones ve cada quien:
+// - Registrar campaña, Ser voluntario y Donar desde casa: todos, incluso sin sesión (al
+//   tocarlas se pide iniciar sesión).
+// - Mi campaña y Mi voluntariado: solo con sesión, porque muestran datos propios.
+// (Los detalles que faltan —Mi campaña según las campañas propias, Panel BAMX— son de la Fase 6.)
 type RolesInput = Pick<
   ReturnType<typeof useMyRoles>,
   'isAdmin' | 'isVolunteer' | 'volunteerStatus'
->;
+> & { isSignedIn: boolean };
 
-function optionsFor({ isAdmin, isVolunteer, volunteerStatus }: RolesInput): Option[] {
+function optionsFor({ isSignedIn, isAdmin, isVolunteer, volunteerStatus }: RolesInput): Option[] {
   const options: Option[] = [];
 
-  if (isVolunteer || isAdmin) {
-    options.push(
-      {
-        key: 'new-campaign',
-        icon: 'bullhorn-outline',
-        title: 'Registrar campaña',
-        description: 'Da de alta tu iniciativa',
-        href: '/my-campaigns/new',
-      },
-      {
-        key: 'my-campaigns',
-        icon: 'clipboard-list-outline',
-        title: isAdmin ? 'Campañas' : 'Mi campaña',
-        description: isAdmin
-          ? 'Revisa, aprueba y administra todas las campañas'
-          : 'Da seguimiento a las campañas que registraste',
-        href: '/my-campaigns',
-      },
-    );
+  // Registrar campaña la ve cualquiera: la revisión del admin es la que valida (decisión 3
+  // del plan). RLS también lo permite: basta tener sesión y ser el organizador.
+  options.push({
+    key: 'new-campaign',
+    icon: 'bullhorn-outline',
+    title: 'Registrar campaña',
+    description: 'Da de alta tu iniciativa',
+    href: '/my-campaigns/new',
+  });
+
+  // Con sesión siempre: si no, quien registra una campaña no tendría cómo volver a verla.
+  // En F6 se afina para mostrarla solo cuando tiene campañas, y con el nombre de la campaña.
+  if (isSignedIn) {
+    options.push({
+      key: 'my-campaigns',
+      icon: 'clipboard-list-outline',
+      title: isAdmin ? 'Campañas' : 'Mis campañas',
+      description: isAdmin
+        ? 'Revisa, aprueba y administra todas las campañas'
+        : 'Da seguimiento a las campañas que registraste',
+      href: '/my-campaigns',
+    });
   }
 
-  if (isVolunteer) {
+  if (isSignedIn && isVolunteer) {
     options.push({
       key: 'volunteer-dashboard',
       icon: 'account-heart-outline',
@@ -83,19 +88,23 @@ function optionsFor({ isAdmin, isVolunteer, volunteerStatus }: RolesInput): Opti
 
 export function HelpHub() {
   const roles = useMyRoles();
+  const { session } = useAuth();
+  const requireAuth = useRequireAuth();
 
   if (roles.isLoading) return <ActivityIndicator style={styles.loading} color={colors.primary} />;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.subtitle}>Elige cómo quieres apoyar al Banco de Alimentos.</Text>
-      {optionsFor(roles).map((option) => (
+      {optionsFor({ ...roles, isSignedIn: !!session }).map((option) => (
         <HelpOption
           key={option.key}
           icon={option.icon}
           title={option.title}
           description={option.description}
-          onPress={() => router.push(option.href)}
+          // Todas estas pantallas exigen sesión: sin ella se manda a iniciar sesión y al
+          // volver se abre la que se quería.
+          onPress={() => requireAuth(option.href)}
         />
       ))}
       {roles.error && <Text style={styles.error}>No se pudo cargar tu rol: {roles.error}</Text>}

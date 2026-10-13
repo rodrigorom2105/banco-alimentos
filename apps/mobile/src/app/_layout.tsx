@@ -1,12 +1,14 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
+import { useEffect } from 'react';
 
 import { AppProviders, useAuth } from '@/providers';
 
-// Pantallas con sesión fuera de las pestañas. Cada una dibuja su propio encabezado (Screen),
-// por eso la barra nativa va oculta. Deben quedar dentro de Stack.Protected: una ruta que no
-// se declare ahí queda accesible sin sesión.
+// Sin sesión se puede ver Inicio, Explorar, Ayudar, Mi cuenta (vista de invitado) y el detalle
+// de una campaña. Todo lo demás exige sesión: cada una de estas rutas dibuja su propio
+// encabezado (Screen), por eso la barra nativa va oculta. Deben quedar dentro de
+// Stack.Protected: una ruta que no se declare ahí queda accesible sin sesión, incluso por
+// deep link.
 const SIGNED_IN_SCREENS = [
-  'campaign/[id]',
   'donation/new',
   'my-campaigns/index',
   'my-campaigns/new',
@@ -16,16 +18,44 @@ const SIGNED_IN_SCREENS = [
   'volunteer/dashboard',
 ];
 
+// La app abre en las pestañas, no en el carrusel: un invitado entra directo a explorar.
+export const unstable_settings = {
+  initialRouteName: '(tabs)',
+};
+
 function RootNavigator() {
-  const { session, isLoading, isRecoveringPassword } = useAuth();
-  if (isLoading) return null;
+  const {
+    session,
+    isLoading,
+    isRecoveringPassword,
+    hasSeenWelcome,
+    pendingRedirect,
+    setPendingRedirect,
+  } = useAuth();
 
   const isSignedIn = !!session && !isRecoveringPassword;
 
+  // Carrusel de bienvenida: la primera vez que se abre la app y cada vez que se cierra sesión
+  // (al cerrar sesión se borra la bandera).
+  useEffect(() => {
+    if (!isLoading && !isSignedIn && !hasSeenWelcome) router.replace('/welcome');
+  }, [isLoading, isSignedIn, hasSeenWelcome]);
+
+  // El invitado que quiso abrir una pantalla protegida llega a ella en cuanto inicia sesión.
+  useEffect(() => {
+    if (!isSignedIn || !pendingRedirect) return;
+    const href = pendingRedirect;
+    setPendingRedirect(null);
+    router.push(href);
+  }, [isSignedIn, pendingRedirect, setPendingRedirect]);
+
+  if (isLoading) return null;
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="campaign/[id]" />
       <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(tabs)" />
         {SIGNED_IN_SCREENS.map((name) => (
           <Stack.Screen key={name} name={name} />
         ))}

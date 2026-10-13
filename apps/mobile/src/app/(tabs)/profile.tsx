@@ -1,17 +1,23 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ProfileDetails } from '@/features/profile';
+import { GuestProfile, ProfileDetails } from '@/features/profile';
 import { useAuth } from '@/providers';
 import { Button, Screen } from '@/shared/components';
 import { colors, spacing } from '@/shared/theme';
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
   return (
     <Screen title="Mi cuenta" showBack={false}>
       <View style={styles.container}>
-        <ProfileDetails />
-        <Button title="Cerrar sesión" onPress={signOut} />
+        {session ? (
+          <>
+            <ProfileDetails />
+            <Button title="Cerrar sesión" onPress={signOut} />
+          </>
+        ) : (
+          <GuestProfile />
+        )}
       </View>
     </Screen>
   );
