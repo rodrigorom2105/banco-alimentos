@@ -8,6 +8,7 @@ import { loadEnv } from '../../infrastructure/config/env';
 import {
   CAMPAIGN_ID,
   InMemoryCampaignRepository,
+  InMemoryNotifier,
   InMemoryUserRepository,
   fakeAuth,
   fixedClock,
@@ -27,9 +28,16 @@ let server: Server | undefined;
 async function start() {
   const campaigns = new InMemoryCampaignRepository([makeCampaign()]);
   const users = new InMemoryUserRepository();
+  const notifier = new InMemoryNotifier();
   await users.grantRole('admin', 'admin', null);
   const app = createApp(
-    buildContainer(env, { campaigns, users, auth: fakeAuth, clock: fixedClock('2026-09-25') }),
+    buildContainer(env, {
+      campaigns,
+      users,
+      auth: fakeAuth,
+      clock: fixedClock('2026-09-25'),
+      notifier,
+    }),
   );
   server = app.listen(0);
   await new Promise((resolve) => server!.once('listening', resolve));
@@ -43,7 +51,7 @@ async function start() {
         ...(init.headers as Record<string, string> | undefined),
       },
     });
-  return { call, campaigns };
+  return { call, campaigns, notifier };
 }
 
 afterEach(() => {

@@ -10,6 +10,7 @@ import { AppProviders, useAuth } from '@/providers';
 // deep link.
 const SIGNED_IN_SCREENS = [
   'donation/new',
+  'notifications',
   'my-campaigns/index',
   'my-campaigns/new',
   'my-campaigns/[id]/index',

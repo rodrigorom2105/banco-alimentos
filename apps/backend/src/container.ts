@@ -7,12 +7,14 @@ import {
 import type { AuthService, Clock } from './application/ports';
 import { GrantAdminRole } from './application/users/grantAdminRole';
 import type { CampaignRepository } from './domain/campaigns/CampaignRepository';
+import type { Notifier } from './domain/notifications/Notifier';
 import type { UserRepository } from './domain/users/UserRepository';
 import { systemClock } from './infrastructure/clock';
 import type { Env } from './infrastructure/config/env';
 import { createSupabaseAdmin } from './infrastructure/supabase/client';
 import { SupabaseAuthService } from './infrastructure/supabase/SupabaseAuthService';
 import { SupabaseCampaignRepository } from './infrastructure/supabase/SupabaseCampaignRepository';
+import { SupabaseNotifier } from './infrastructure/supabase/SupabaseNotifier';
 import { SupabaseUserRepository } from './infrastructure/supabase/SupabaseUserRepository';
 
 type Adapters = {
@@ -20,6 +22,7 @@ type Adapters = {
   users: UserRepository;
   auth: AuthService;
   clock: Clock;
+  notifier: Notifier;
 };
 
 // Raíz de composición: el único lugar que conoce las implementaciones concretas y las
@@ -31,6 +34,7 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
     users: new SupabaseUserRepository(db),
     auth: new SupabaseAuthService(db),
     clock: systemClock,
+    notifier: new SupabaseNotifier(db),
     ...overrides,
   };
 
@@ -40,8 +44,8 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
     repositories: { campaigns: adapters.campaigns, users: adapters.users },
     useCases: {
       listCampaignsForReview: new ListCampaignsForReview(adapters.campaigns),
-      approveCampaign: new ApproveCampaign(adapters.campaigns, adapters.clock),
-      rejectCampaign: new RejectCampaign(adapters.campaigns),
+      approveCampaign: new ApproveCampaign(adapters.campaigns, adapters.clock, adapters.notifier),
+      rejectCampaign: new RejectCampaign(adapters.campaigns, adapters.notifier),
       finishCampaign: new FinishCampaign(adapters.campaigns),
       grantAdminRole: new GrantAdminRole(adapters.users),
     },

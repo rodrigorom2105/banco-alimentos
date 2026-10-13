@@ -389,6 +389,33 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: Database['public']['Enums']['notification_type'];
+          title: string;
+          body: string;
+          // Ids para navegar al tocarla, ej. { campaignId: '...' }.
+          data: Json;
+          read_at: string | null;
+          created_at: string;
+        };
+        // La app nunca inserta: la tabla no tiene política de insert. Solo el backend
+        // (llave secreta) y los triggers de 06_notifications.sql crean notificaciones.
+        Insert: never;
+        // Un trigger impide cambiar cualquier otra columna.
+        Update: { read_at?: string | null };
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     // get_available_donation_requests() y get_request_volunteer() existen, pero su firma no está
@@ -405,6 +432,19 @@ export type Database = {
       donation_request_status: 'pending' | 'assigned' | 'completed' | 'cancelled';
       item_unit: 'piece' | 'package' | 'box' | 'kg' | 'g' | 'liter' | 'ml';
       pickup_status: 'assigned' | 'on_the_way' | 'collected' | 'delivered' | 'cancelled';
+      notification_type:
+        | 'campaign_approved'
+        | 'campaign_rejected'
+        | 'campaign_pending_review'
+        | 'volunteer_approved'
+        | 'volunteer_rejected'
+        | 'volunteer_suspended'
+        | 'volunteer_pending_review'
+        | 'pickup_assigned'
+        | 'pickup_on_the_way'
+        | 'pickup_cancelled'
+        | 'pickup_delivered'
+        | 'donation_unassigned';
     };
     CompositeTypes: { [_ in never]: never };
   };

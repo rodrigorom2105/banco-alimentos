@@ -9,6 +9,7 @@ import {
 import {
   CAMPAIGN_ID,
   InMemoryCampaignRepository,
+  InMemoryNotifier,
   fixedClock,
   makeCampaign,
 } from '../../test-support/inMemory';
@@ -19,62 +20,110 @@ const admin = { userId: 'admin', isAdmin: true };
 const organizer = { userId: 'organizer', isAdmin: false };
 const stranger = { userId: 'stranger', isAdmin: false };
 
+const TODAY = '2026-09-25';
+
+// El notificador en memoria reemplaza a Supabase: guarda los avisos en un arreglo que el test
+// puede revisar.
+const approveWith = (repo: InMemoryCampaignRepository, today = TODAY) => {
+  const notifier = new InMemoryNotifier();
+  return { useCase: new ApproveCampaign(repo, fixedClock(today), notifier), notifier };
+};
+
+const rejectWith = (repo: InMemoryCampaignRepository) => {
+  const notifier = new InMemoryNotifier();
+  return { useCase: new RejectCampaign(repo, notifier), notifier };
+};
+
 describe('ApproveCampaign', () => {
   it('deja la campaña como approved si todavía no empieza', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign({ startDate: '2026-10-01' })]);
-    const result = await new ApproveCampaign(repo, fixedClock('2026-09-25')).execute(
-      admin,
-      CAMPAIGN_ID,
-    );
+    const result = await approveWith(repo).useCase.execute(admin, CAMPAIGN_ID);
     expect(result.status).toBe('approved');
     expect(repo.reviews[0].review).toMatchObject({ reviewedBy: 'admin', rejectionReason: null });
   });
 
   it('la activa directamente si la fecha de inicio ya llegó', async () => {
-    const repo = new InMemoryCampaignRepository([makeCampaign({ startDate: '2026-09-25' })]);
-    const result = await new ApproveCampaign(repo, fixedClock('2026-09-25')).execute(
-      admin,
-      CAMPAIGN_ID,
-    );
+    const repo = new InMemoryCampaignRepository([makeCampaign({ startDate: TODAY })]);
+    const result = await approveWith(repo).useCase.execute(admin, CAMPAIGN_ID);
     expect(result.status).toBe('active');
+  });
+
+  it('notifica al organizador, con el estado con el que quedó', async () => {
+    const repo = new InMemoryCampaignRepository([makeCampaign({ startDate: TODAY })]);
+    const { useCase, notifier } = approveWith(repo);
+    await useCase.execute(admin, CAMPAIGN_ID);
+
+    expect(notifier.sent).toHaveLength(1);
+    expect(notifier.sent[0].userId).toBe('organizer');
+    expect(notifier.sent[0].notification).toMatchObject({
+      type: 'campaign_approved',
+      data: { campaignId: CAMPAIGN_ID },
+    });
+    // Quedó activa, así que el mensaje debe decir que ya se ve.
+    expect(notifier.sent[0].notification.body).toContain('ya aparece en Explorar');
   });
 
   it('rechaza a quien no es admin', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign()]);
-    await expect(
-      new ApproveCampaign(repo, fixedClock('2026-09-25')).execute(organizer, CAMPAIGN_ID),
-    ).rejects.toBeInstanceOf(ForbiddenError);
+    const { useCase, notifier } = approveWith(repo);
+    await expect(useCase.execute(organizer, CAMPAIGN_ID)).rejects.toBeInstanceOf(ForbiddenError);
     expect(repo.reviews).toHaveLength(0);
+    // Nada de avisos de algo que no pasó.
+    expect(notifier.sent).toHaveLength(0);
   });
 
-  it('no aprueba una campaña que ya no está pendiente', async () => {
+  it('no aprueba una campaña que ya no está pendiente, ni notifica', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign({ status: 'rejected' })]);
-    await expect(
-      new ApproveCampaign(repo, fixedClock('2026-09-25')).execute(admin, CAMPAIGN_ID),
-    ).rejects.toBeInstanceOf(ConflictError);
+    const { useCase, notifier } = approveWith(repo);
+    await expect(useCase.execute(admin, CAMPAIGN_ID)).rejects.toBeInstanceOf(ConflictError);
+    expect(notifier.sent).toHaveLength(0);
   });
 
   it('avisa si la campaña no existe', async () => {
     const repo = new InMemoryCampaignRepository([]);
-    await expect(
-      new ApproveCampaign(repo, fixedClock('2026-09-25')).execute(admin, CAMPAIGN_ID),
-    ).rejects.toBeInstanceOf(NotFoundError);
+    const { useCase, notifier } = approveWith(repo);
+    await expect(useCase.execute(admin, CAMPAIGN_ID)).rejects.toBeInstanceOf(NotFoundError);
+    expect(notifier.sent).toHaveLength(0);
+  });
+
+  // Los centros BAMX no tienen organizador: no hay a quién avisarle, y no debe tronar.
+  it('no intenta notificar si la campaña no tiene organizador', async () => {
+    const repo = new InMemoryCampaignRepository([
+      makeCampaign({ type: 'institutional', organizerId: null }),
+    ]);
+    const { useCase, notifier } = approveWith(repo);
+    await useCase.execute(admin, CAMPAIGN_ID);
+    expect(notifier.sent).toHaveLength(0);
   });
 });
 
 describe('RejectCampaign', () => {
   it('guarda el motivo del rechazo', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign()]);
-    const result = await new RejectCampaign(repo).execute(admin, CAMPAIGN_ID, '  Falta dirección ');
+    const result = await rejectWith(repo).useCase.execute(admin, CAMPAIGN_ID, '  Falta dirección ');
     expect(result.status).toBe('rejected');
     expect(repo.reviews[0].review.rejectionReason).toBe('Falta dirección');
   });
 
-  it('exige un motivo', async () => {
+  it('notifica al organizador con el motivo', async () => {
     const repo = new InMemoryCampaignRepository([makeCampaign()]);
-    await expect(
-      new RejectCampaign(repo).execute(admin, CAMPAIGN_ID, '   '),
-    ).rejects.toBeInstanceOf(ValidationError);
+    const { useCase, notifier } = rejectWith(repo);
+    await useCase.execute(admin, CAMPAIGN_ID, '  Falta dirección ');
+
+    expect(notifier.sent).toHaveLength(1);
+    expect(notifier.sent[0].userId).toBe('organizer');
+    expect(notifier.sent[0].notification.type).toBe('campaign_rejected');
+    // El motivo viaja ya recortado por la regla del dominio.
+    expect(notifier.sent[0].notification.body).toContain('Falta dirección');
+  });
+
+  it('exige un motivo y no notifica', async () => {
+    const repo = new InMemoryCampaignRepository([makeCampaign()]);
+    const { useCase, notifier } = rejectWith(repo);
+    await expect(useCase.execute(admin, CAMPAIGN_ID, '   ')).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    expect(notifier.sent).toHaveLength(0);
   });
 });
 

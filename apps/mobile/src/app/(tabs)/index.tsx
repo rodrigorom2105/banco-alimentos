@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HomeCard, NotificationBell } from '@/features/home';
+import { useUnreadCount } from '@/features/notifications';
 import { useMyProfile } from '@/features/profile';
 import { useAuth } from '@/providers';
 import { useRequireAuth } from '@/shared/hooks';
@@ -11,6 +12,7 @@ import { colors, spacing } from '@/shared/theme';
 export default function HomeScreen() {
   const { session } = useAuth();
   const { profile } = useMyProfile();
+  const { unreadCount } = useUnreadCount();
   const requireAuth = useRequireAuth();
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : '';
 
@@ -23,8 +25,9 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>{session ? 'Hola,' : 'Bienvenido a'}</Text>
             <Text style={styles.name}>{session ? fullName : 'BAMX Conecta'}</Text>
           </View>
-          {/* TODO: conectar el contador cuando exista la tabla de notificaciones */}
-          {session && <NotificationBell count={0} />}
+          {session && (
+            <NotificationBell count={unreadCount} onPress={() => router.push('/notifications')} />
+          )}
         </View>
 
         <View style={styles.cards}>
