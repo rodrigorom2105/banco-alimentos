@@ -2,17 +2,40 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { usePendingCounts } from '@/features/admin';
 import { HomeCard, NotificationBell } from '@/features/home';
 import { useUnreadCount } from '@/features/notifications';
-import { useMyProfile } from '@/features/profile';
+import { useMyProfile, useMyRoles } from '@/features/profile';
 import { useAuth } from '@/providers';
 import { useRequireAuth } from '@/shared/hooks';
 import { colors, spacing } from '@/shared/theme';
 
+// "3 campañas y 1 voluntario por revisar", sin partes en cero y en plural correcto.
+function pendingSummary({
+  campaigns,
+  volunteers,
+  support,
+}: {
+  campaigns: number;
+  volunteers: number;
+  support: number;
+}) {
+  const parts = [
+    campaigns > 0 && `${campaigns} ${campaigns === 1 ? 'campaña' : 'campañas'}`,
+    volunteers > 0 && `${volunteers} ${volunteers === 1 ? 'voluntario' : 'voluntarios'}`,
+    support > 0 && `${support} ${support === 1 ? 'solicitud' : 'solicitudes'} de apoyo`,
+  ].filter((part): part is string => !!part);
+
+  if (parts.length === 0) return 'No tienes nada pendiente por revisar';
+  return `${parts.join(', ').replace(/, ([^,]*)$/, ' y $1')} por revisar`;
+}
+
 export default function HomeScreen() {
   const { session } = useAuth();
   const { profile } = useMyProfile();
+  const { isAdmin } = useMyRoles();
   const { unreadCount } = useUnreadCount();
+  const { counts } = usePendingCounts(isAdmin);
   const requireAuth = useRequireAuth();
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : '';
 
@@ -31,6 +54,15 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.cards}>
+          {/* El panel va primero y solo para admins: es lo que viene a hacer a la app. El
+              resto de su vista es igual a la de cualquier usuario. */}
+          {isAdmin && (
+            <HomeCard
+              title="Panel BAMX"
+              description={pendingSummary(counts)}
+              onPress={() => router.push('/admin')}
+            />
+          )}
           <HomeCard
             title="Explorar"
             description="Encuentra campañas cerca de ti"

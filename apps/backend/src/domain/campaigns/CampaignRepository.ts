@@ -1,4 +1,9 @@
-import type { Campaign, CampaignReview, CampaignStatus } from './Campaign';
+import type {
+  Campaign,
+  CampaignReview,
+  CampaignStatus,
+  NewInstitutionalCampaign,
+} from './Campaign';
 
 // Puerto: el dominio define qué necesita; la infraestructura decide cómo (Supabase, memoria…).
 export interface CampaignRepository {
@@ -6,4 +11,6 @@ export interface CampaignRepository {
   listByStatus(status: CampaignStatus | null): Promise<Campaign[]>;
   saveReview(id: string, review: CampaignReview): Promise<void>;
   markFinished(id: string): Promise<void>;
+  // Devuelve el id del centro creado.
+  createInstitutional(data: NewInstitutionalCampaign): Promise<string>;
 }

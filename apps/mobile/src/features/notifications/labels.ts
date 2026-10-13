@@ -19,6 +19,9 @@ export const NOTIFICATION_ICONS: Record<NotificationType, IconName> = {
   pickup_cancelled: 'home-heart',
   pickup_delivered: 'home-heart',
   donation_unassigned: 'clipboard-list-outline',
+  support_approved: 'hand-heart-outline',
+  support_rejected: 'hand-heart-outline',
+  support_delivered: 'hand-heart-outline',
 };
 
 const MINUTE = 60 * 1000;

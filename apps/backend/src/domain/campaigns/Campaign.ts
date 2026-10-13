@@ -23,6 +23,47 @@ export type CampaignReview = {
   rejectionReason: string | null;
 };
 
+// Datos para dar de alta un Centro BAMX (campaña institucional).
+export type NewInstitutionalCampaign = {
+  name: string;
+  description: string | null;
+  address: string;
+  municipalityId: number;
+  latitude: number;
+  longitude: number;
+  startDate: string | null;
+  endDate: string | null;
+  schedule: string | null;
+  contactPhone: string | null;
+};
+
+/**
+ * Valida un Centro BAMX antes de crearlo. A diferencia de una campaña comunitaria:
+ * no tiene organizador (es de BAMX, no de una persona), las fechas son opcionales y
+ * `endDate` en null significa punto permanente. La base lo deja `active` sola.
+ */
+export function createInstitutional(data: NewInstitutionalCampaign): NewInstitutionalCampaign {
+  if (!data.name.trim()) throw new ValidationError('El nombre del centro es obligatorio.');
+  if (!data.address.trim()) throw new ValidationError('La dirección es obligatoria.');
+  if (data.latitude < -90 || data.latitude > 90) {
+    throw new ValidationError('La latitud debe estar entre -90 y 90.');
+  }
+  if (data.longitude < -180 || data.longitude > 180) {
+    throw new ValidationError('La longitud debe estar entre -180 y 180.');
+  }
+  if (data.startDate && data.endDate && data.endDate < data.startDate) {
+    throw new ValidationError('La fecha de fin debe ser igual o posterior a la de inicio.');
+  }
+  return {
+    ...data,
+    name: data.name.trim(),
+    address: data.address.trim(),
+    description: data.description?.trim() || null,
+    schedule: data.schedule?.trim() || null,
+    contactPhone: data.contactPhone?.trim() || null,
+  };
+}
+
 // Reglas de estado del esquema (bamx-conecta-db-schema.md, sección 5.7):
 // pending → approved o rejected; approved → active → finished.
 

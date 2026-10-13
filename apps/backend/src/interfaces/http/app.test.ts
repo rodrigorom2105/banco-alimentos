@@ -9,10 +9,16 @@ import {
   CAMPAIGN_ID,
   InMemoryCampaignRepository,
   InMemoryNotifier,
+  InMemorySupportRequestRepository,
   InMemoryUserRepository,
+  InMemoryVolunteerRepository,
+  SUPPORT_ID,
+  VOLUNTEER_ID,
   fakeAuth,
   fixedClock,
   makeCampaign,
+  makeSupportRequest,
+  makeVolunteer,
 } from '../../test-support/inMemory';
 import { createApp } from './app';
 
@@ -27,12 +33,16 @@ let server: Server | undefined;
 // Levanta la app real (rutas, middlewares y casos de uso) con adaptadores en memoria.
 async function start() {
   const campaigns = new InMemoryCampaignRepository([makeCampaign()]);
+  const volunteers = new InMemoryVolunteerRepository([makeVolunteer()]);
+  const support = new InMemorySupportRequestRepository([makeSupportRequest()]);
   const users = new InMemoryUserRepository();
   const notifier = new InMemoryNotifier();
   await users.grantRole('admin', 'admin', null);
   const app = createApp(
     buildContainer(env, {
       campaigns,
+      volunteers,
+      support,
       users,
       auth: fakeAuth,
       clock: fixedClock('2026-09-25'),
@@ -51,7 +61,7 @@ async function start() {
         ...(init.headers as Record<string, string> | undefined),
       },
     });
-  return { call, campaigns, notifier };
+  return { call, campaigns, volunteers, support, notifier };
 }
 
 afterEach(() => {
@@ -117,6 +127,113 @@ describe('API HTTP', () => {
       body: JSON.stringify({}),
     });
     expect(noReason.status).toBe(400);
+  });
+
+  // --- Voluntarios (Fase 5) ---
+
+  it('un admin aprueba a un voluntario', async () => {
+    const { call, volunteers } = await start();
+    const res = await call(`/admin/volunteers/${VOLUNTEER_ID}/approve`, {
+      method: 'POST',
+      token: 'token-admin',
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: 'approved' });
+    expect((await volunteers.findById(VOLUNTEER_ID))?.status).toBe('approved');
+  });
+
+  it('un no admin no puede listar ni revisar voluntarios (403)', async () => {
+    const { call } = await start();
+    expect((await call('/admin/volunteers', { token: 'token-organizer' })).status).toBe(403);
+    expect(
+      (
+        await call(`/admin/volunteers/${VOLUNTEER_ID}/approve`, {
+          method: 'POST',
+          token: 'token-organizer',
+        })
+      ).status,
+    ).toBe(403);
+  });
+
+  it('rechazar o suspender sin motivo responde 400', async () => {
+    const { call } = await start();
+    for (const action of ['reject', 'suspend']) {
+      const res = await call(`/admin/volunteers/${VOLUNTEER_ID}/${action}`, {
+        method: 'POST',
+        token: 'token-admin',
+        body: JSON.stringify({ reason: '   ' }),
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  // --- Solicitudes de apoyo (Fase 5) ---
+
+  it('un admin responde una solicitud de apoyo', async () => {
+    const { call, support } = await start();
+    const res = await call(`/admin/support-requests/${SUPPORT_ID}/respond`, {
+      method: 'POST',
+      token: 'token-admin',
+      body: JSON.stringify({ approved: true, message: 'Van el jueves.' }),
+    });
+    expect(res.status).toBe(200);
+    expect((await support.findById(SUPPORT_ID))?.status).toBe('approved');
+  });
+
+  it('rechazar un apoyo sin mensaje responde 400', async () => {
+    const { call } = await start();
+    const res = await call(`/admin/support-requests/${SUPPORT_ID}/respond`, {
+      method: 'POST',
+      token: 'token-admin',
+      body: JSON.stringify({ approved: false }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  // --- Centros BAMX (Fase 5) ---
+
+  it('un admin registra un Centro BAMX y queda activo', async () => {
+    const { call, campaigns } = await start();
+    const res = await call('/admin/campaigns', {
+      method: 'POST',
+      token: 'token-admin',
+      body: JSON.stringify({
+        name: 'Centro BAMX Zapopan',
+        address: 'Av. Patria 123',
+        municipalityId: 2,
+        latitude: 20.72,
+        longitude: -103.41,
+      }),
+    });
+    expect(res.status).toBe(201);
+    const { id } = (await res.json()) as { id: string };
+    expect((await campaigns.findById(id))?.status).toBe('active');
+  });
+
+  it('un no admin no puede registrar un Centro BAMX (403)', async () => {
+    const { call } = await start();
+    const res = await call('/admin/campaigns', {
+      method: 'POST',
+      token: 'token-organizer',
+      body: JSON.stringify({
+        name: 'Centro pirata',
+        address: 'Calle 1',
+        municipalityId: 1,
+        latitude: 20.6,
+        longitude: -103.3,
+      }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('un Centro BAMX sin coordenadas responde 400', async () => {
+    const { call } = await start();
+    const res = await call('/admin/campaigns', {
+      method: 'POST',
+      token: 'token-admin',
+      body: JSON.stringify({ name: 'Centro', address: 'Calle 1', municipalityId: 1 }),
+    });
+    expect(res.status).toBe(400);
   });
 
   it('una acción inválida para el estado responde 409', async () => {
