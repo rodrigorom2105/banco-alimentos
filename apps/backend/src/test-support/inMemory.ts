@@ -1,6 +1,8 @@
 import type { AuthService, Clock } from '../application/ports';
 import type { Campaign, CampaignReview, CampaignStatus } from '../domain/campaigns/Campaign';
 import type { CampaignRepository } from '../domain/campaigns/CampaignRepository';
+import type { NewNotification } from '../domain/notifications/Notification';
+import type { Notifier } from '../domain/notifications/Notifier';
 import type { Role, UserRepository } from '../domain/users/UserRepository';
 
 // Adaptadores falsos para probar casos de uso y rutas sin Supabase.
@@ -50,6 +52,20 @@ export class InMemoryUserRepository implements UserRepository {
   async grantRole(userId: string, role: Role, grantedBy: string | null) {
     this.roles.set(userId, new Set([...(this.roles.get(userId) ?? []), role]));
     this.grants.push({ userId, grantedBy });
+  }
+}
+
+// Guarda los avisos en un arreglo para poder revisarlos en los tests.
+export class InMemoryNotifier implements Notifier {
+  readonly sent: { userId: string; notification: NewNotification }[] = [];
+  readonly sentToAdmins: { notification: NewNotification; except: string | null }[] = [];
+
+  async notify(userId: string, notification: NewNotification) {
+    this.sent.push({ userId, notification });
+  }
+
+  async notifyAdmins(notification: NewNotification, except: string | null = null) {
+    this.sentToAdmins.push({ notification, except });
   }
 }
 
