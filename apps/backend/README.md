@@ -1,11 +1,11 @@
 # Backend
 
-API de BAMX Conecta en Express + TypeScript. Hace lo que la app móvil no puede hacer por sí sola porque requiere la llave `service_role` de Supabase (que se salta RLS y **solo** debe vivir aquí).
+API de BAMX Conecta en Express + TypeScript. Hace lo que la app móvil no puede hacer por sí sola porque requiere la llave secreta de Supabase (que se salta RLS y **solo** debe vivir aquí).
 
 ## Configuración
 
 1. Desde la raíz del monorepo: `pnpm install`
-2. Copia `.env.example` como `.env` y llena `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API). El servidor no arranca si falta alguna y dice cuál.
+2. Copia `.env.example` como `.env` y llena `SUPABASE_URL` y `SUPABASE_SECRET_KEY` (Supabase → Project Settings → API Keys → **Secret keys**, empieza con `sb_secret_`). El servidor no arranca si falta alguna y dice cuál; tampoco arranca si por error se pone la llave publicable (`sb_publishable_`), porque con esa el backend tendría permisos de invitado.
 
 ## Comandos
 
@@ -36,7 +36,7 @@ src/
 │   └── ports.ts       # Actor, AuthService, Clock
 ├── infrastructure/    # Adaptadores concretos
 │   ├── config/        # Variables de entorno validadas con zod
-│   ├── supabase/      # Cliente service_role y repositorios
+│   ├── supabase/      # Cliente con la llave secreta y repositorios
 │   └── clock.ts       # Fecha de hoy en hora de Guadalajara
 ├── interfaces/        # Entradas al sistema
 │   ├── http/          # Express: app, middlewares (auth, errores) y rutas

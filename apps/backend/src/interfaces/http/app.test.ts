@@ -18,7 +18,7 @@ import { createApp } from './app';
 const env = loadEnv({
   NODE_ENV: 'test',
   SUPABASE_URL: 'http://localhost:54321',
-  SUPABASE_SERVICE_ROLE_KEY: 'test-key',
+  SUPABASE_SECRET_KEY: 'test-key',
 });
 
 let server: Server | undefined;

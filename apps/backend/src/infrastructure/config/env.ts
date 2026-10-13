@@ -8,8 +8,15 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   SUPABASE_URL: z.url(),
-  // Llave con acceso total: solo vive en el backend, nunca en la app ni en el repositorio.
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  // Llave secreta (`sb_secret_…`, antes `service_role`): se salta RLS, así que tiene acceso
+  // total. Solo vive en el backend, nunca en la app ni en el repositorio. Si aquí se pone por
+  // error la llave publicable, el backend queda con permisos de invitado y todo responde 403.
+  SUPABASE_SECRET_KEY: z
+    .string()
+    .min(1)
+    .refine((key) => !key.startsWith('sb_publishable_'), {
+      message: 'es la llave publicable; se necesita la secreta (sb_secret_…) de Supabase.',
+    }),
   // Orígenes permitidos para CORS (separados por coma); vacío = sin restricción en desarrollo.
   CORS_ORIGINS: z.string().default(''),
 });
