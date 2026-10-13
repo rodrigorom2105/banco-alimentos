@@ -56,6 +56,10 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="campaign/[id]" />
+      {/* Los textos legales son públicos: un aviso de privacidad que solo se puede leer con
+          cuenta no sirve de mucho. */}
+      <Stack.Screen name="legal/privacy" />
+      <Stack.Screen name="legal/terms" />
       <Stack.Protected guard={isSignedIn}>
         {SIGNED_IN_SCREENS.map((name) => (
           <Stack.Screen key={name} name={name} />
