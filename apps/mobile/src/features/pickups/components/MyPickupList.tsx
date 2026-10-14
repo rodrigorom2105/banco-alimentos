@@ -98,7 +98,28 @@ export function MyPickupList() {
   const offers = pickups.filter(isOffer);
   const confirmed = pickups.filter((p) => !isOffer(p));
   const today = todayISO();
-  const hasRouteToday = confirmed.some((p) => p.request.preferredDate === today);
+
+  /**
+   * De qué día se ofrece la ruta: el próximo que tenga recolecciones confirmadas.
+   *
+   * No se limita a hoy a propósito. Una recolección se agenda con días o semanas de
+   * anticipación, así que un voluntario puede pasar semanas sin nada "hoy"; si el botón solo
+   * apareciera ese día, la ruta parecería no existir.
+   */
+  const routeDate = confirmed
+    .map((p) => p.request.preferredDate)
+    .filter((date) => date >= today)
+    .sort()[0];
+
+  // Agrupadas por fecha: es la única forma de que se entienda qué toca cuándo cuando hay
+  // recolecciones de varios días.
+  const byDate = confirmed
+    .slice()
+    .sort((a, b) => a.request.preferredDate.localeCompare(b.request.preferredDate))
+    .reduce<Record<string, MyPickup[]>>((groups, pickup) => {
+      (groups[pickup.request.preferredDate] ??= []).push(pickup);
+      return groups;
+    }, {});
 
   const refresh = async () => {
     await Promise.all([reload(), reloadSummary()]);
@@ -124,12 +145,13 @@ export function MyPickupList() {
    * por horario y Maps arranca donde esté el celular.
    */
   const openRoute = async () => {
+    if (!routeDate) return;
     setIsOpeningRoute(true);
     setActionError(null);
     try {
-      const { mapsUrl } = await pickupsApi.route(today, await currentLocation());
+      const { mapsUrl } = await pickupsApi.route(routeDate, await currentLocation());
       if (!mapsUrl) {
-        setActionError('No tienes recolecciones confirmadas para hoy.');
+        setActionError('No tienes recolecciones confirmadas para ese día.');
         return;
       }
       await Linking.openURL(mapsUrl);
@@ -150,8 +172,16 @@ export function MyPickupList() {
           <Counter value={summary.deliveredThisMonth} label="Entregadas este mes" />
         </View>
 
-        {hasRouteToday && (
-          <Button title="Ver ruta de hoy" onPress={openRoute} loading={isOpeningRoute} />
+        {/* El botón dice de qué día es la ruta: con recolecciones agendadas a semanas, "hoy"
+            sería casi siempre mentira. */}
+        {routeDate && (
+          <Button
+            title={
+              routeDate === today ? 'Ver ruta de hoy' : `Ver ruta del ${formatDayMonth(routeDate)}`
+            }
+            onPress={openRoute}
+            loading={isOpeningRoute}
+          />
         )}
 
         {actionError && <Text style={styles.error}>{actionError}</Text>}
@@ -176,14 +206,19 @@ export function MyPickupList() {
         ))}
 
         {confirmed.length > 0 && <Text style={styles.sectionTitle}>Mis recolecciones</Text>}
-        {confirmed.map((pickup) => (
-          <PickupCard
-            key={pickup.id}
-            pickup={pickup}
-            busy={busyId === pickup.id}
-            onAccept={() => accept(pickup)}
-            onDecline={() => setDeclining(pickup)}
-          />
+        {Object.entries(byDate).map(([date, group]) => (
+          <View key={date} style={styles.group}>
+            <Text style={styles.groupTitle}>{date === today ? 'Hoy' : formatDayMonth(date)}</Text>
+            {group.map((pickup) => (
+              <PickupCard
+                key={pickup.id}
+                pickup={pickup}
+                busy={busyId === pickup.id}
+                onAccept={() => accept(pickup)}
+                onDecline={() => setDeclining(pickup)}
+              />
+            ))}
+          </View>
         ))}
       </View>
 
@@ -220,6 +255,8 @@ const styles = StyleSheet.create({
   counterValue: { fontSize: 24, fontWeight: 'bold', color: colors.primary },
   counterLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginTop: spacing.xs },
+  group: { gap: spacing.sm },
+  groupTitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   card: {
     gap: spacing.xs,
     padding: spacing.md,
