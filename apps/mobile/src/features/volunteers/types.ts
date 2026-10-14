@@ -26,10 +26,15 @@ export type VolunteerApplicationDraft = {
   phone: string;
 };
 
-// La solicitud propia, para saber si ya existe y en qué estado está.
+// La solicitud propia, para saber si ya existe, en qué estado está y poder precargar el
+// formulario al volver a enviarla.
 export type MyVolunteerApplication = {
   id: string;
   validation_status: VolunteerStatus;
   rejection_reason: string | null;
   created_at: string;
+  available_days: Weekday[];
+  available_from: string;
+  available_to: string;
+  municipalityIds: number[];
 };

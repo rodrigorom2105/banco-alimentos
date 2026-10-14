@@ -68,6 +68,36 @@ export function approve(volunteer: Volunteer, reviewerId: string): VolunteerRevi
   };
 }
 
+/**
+ * Reactivar a un voluntario suspendido.
+ *
+ * Sin esto, suspender no tendría vuelta: `approve` solo funciona desde `pending` y la persona
+ * no puede reenviar su solicitud (reaplicar por cuenta propia sería saltarse la suspensión).
+ * Es decir, un error al suspender quedaba sin forma de deshacerse desde la app.
+ *
+ * Pide municipios por la misma razón que `approve`: sin cobertura no se le podría asignar
+ * ninguna recolección, así que reactivarlo no serviría de nada.
+ */
+export function reactivate(volunteer: Volunteer, reviewerId: string): VolunteerReview {
+  if (volunteer.status !== 'suspended') {
+    throw new ConflictError(
+      `Solo se reactiva a un voluntario suspendido (estado actual: ${volunteer.status}).`,
+    );
+  }
+  if (volunteer.municipalityIds.length === 0) {
+    throw new ConflictError(
+      'La solicitud no tiene municipios de cobertura, así que no se le podrían asignar recolecciones.',
+    );
+  }
+  return {
+    status: 'approved',
+    reviewedBy: reviewerId,
+    reviewedAt: new Date(),
+    // Se limpia el motivo de la suspensión: ya no describe su situación.
+    rejectionReason: null,
+  };
+}
+
 export function reject(volunteer: Volunteer, reviewerId: string, reason: string): VolunteerReview {
   if (volunteer.status !== 'pending') {
     throw new ConflictError(
@@ -80,6 +110,43 @@ export function reject(volunteer: Volunteer, reviewerId: string, reason: string)
     reviewedAt: new Date(),
     rejectionReason: requireReason(reason, 'rechazar'),
   };
+}
+
+// Datos que el voluntario puede corregir al volver a enviar su solicitud. Los documentos no
+// van aquí: su ruta en el bucket es fija ({user_id}/photo.jpg), así que subir uno nuevo los
+// reemplaza sin que la base se entere.
+export type VolunteerResubmission = {
+  availableDays: Weekday[];
+  availableFrom: string;
+  availableTo: string;
+  municipalityIds: number[];
+};
+
+/**
+ * Volver a enviar una solicitud rechazada.
+ *
+ * Solo desde `rejected`: si está pendiente no hay nada que reenviar, y si está suspendida,
+ * reaplicar por cuenta propia sería saltarse la decisión de BAMX. Vuelve a `pending` y limpia
+ * el motivo del rechazo anterior, que ya no aplica a los datos nuevos.
+ */
+export function resubmit(volunteer: Volunteer, data: VolunteerResubmission): VolunteerResubmission {
+  if (volunteer.status !== 'rejected') {
+    throw new ConflictError(
+      volunteer.status === 'suspended'
+        ? 'Tu voluntariado está suspendido. Comunícate con BAMX para reactivarlo.'
+        : `Solo se vuelve a enviar una solicitud rechazada (estado actual: ${volunteer.status}).`,
+    );
+  }
+  if (data.municipalityIds.length === 0) {
+    throw new ValidationError('Elige al menos un municipio donde puedas recoger.');
+  }
+  if (data.availableDays.length === 0) {
+    throw new ValidationError('Elige al menos un día disponible.');
+  }
+  if (data.availableTo <= data.availableFrom) {
+    throw new ValidationError('La hora final debe ser posterior a la inicial.');
+  }
+  return data;
 }
 
 /**

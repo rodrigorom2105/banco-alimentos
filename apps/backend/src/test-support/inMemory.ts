@@ -15,7 +15,12 @@ import type {
 } from '../domain/support/SupportRequest';
 import type { SupportRequestRepository } from '../domain/support/SupportRequestRepository';
 import type { Role, UserRepository } from '../domain/users/UserRepository';
-import type { Volunteer, VolunteerReview, VolunteerStatus } from '../domain/volunteers/Volunteer';
+import type {
+  Volunteer,
+  VolunteerResubmission,
+  VolunteerReview,
+  VolunteerStatus,
+} from '../domain/volunteers/Volunteer';
 import type { VolunteerRepository } from '../domain/volunteers/VolunteerRepository';
 
 // Adaptadores falsos para probar casos de uso y rutas sin Supabase.
@@ -89,11 +94,16 @@ export class InMemoryUserRepository implements UserRepository {
 
 export class InMemoryVolunteerRepository implements VolunteerRepository {
   readonly reviews: { id: string; review: VolunteerReview }[] = [];
+  readonly resubmissions: { id: string; data: VolunteerResubmission }[] = [];
 
   constructor(private readonly volunteers: Volunteer[] = []) {}
 
   async findById(id: string) {
     return this.volunteers.find((v) => v.id === id) ?? null;
+  }
+
+  async findByUserId(userId: string) {
+    return this.volunteers.find((v) => v.userId === userId) ?? null;
   }
 
   async listByStatus(status: VolunteerStatus | null) {
@@ -106,6 +116,19 @@ export class InMemoryVolunteerRepository implements VolunteerRepository {
     if (volunteer) {
       volunteer.status = review.status;
       volunteer.rejectionReason = review.rejectionReason;
+    }
+  }
+
+  async saveResubmission(id: string, data: VolunteerResubmission) {
+    this.resubmissions.push({ id, data });
+    const volunteer = this.volunteers.find((v) => v.id === id);
+    if (volunteer) {
+      volunteer.status = 'pending';
+      volunteer.rejectionReason = null;
+      volunteer.availableDays = data.availableDays;
+      volunteer.availableFrom = data.availableFrom;
+      volunteer.availableTo = data.availableTo;
+      volunteer.municipalityIds = data.municipalityIds;
     }
   }
 }

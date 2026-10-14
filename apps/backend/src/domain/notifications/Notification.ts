@@ -62,12 +62,35 @@ export function volunteerApproved(): NewNotification {
   };
 }
 
+// Reusa el tipo `volunteer_approved` en lugar de pedir un valor nuevo en el enum de la base:
+// para la app significan lo mismo (tu acceso está activo) y llevan a la misma pantalla.
+export function volunteerReactivated(): NewNotification {
+  return {
+    type: 'volunteer_approved',
+    title: 'Tu voluntariado está activo otra vez',
+    body: 'BAMX levantó la suspensión. Ya puedes volver a recibir recolecciones.',
+    data: {},
+  };
+}
+
 export function volunteerRejected(reason: string): NewNotification {
   return {
     type: 'volunteer_rejected',
     title: 'Tu solicitud de voluntariado no fue aprobada',
     body: reason,
     data: {},
+  };
+}
+
+// Para los admins. El mismo aviso que manda el trigger de 06_notifications.sql cuando llega
+// una solicitud nueva; aquí se usa cuando alguien vuelve a enviar la suya (eso es un UPDATE,
+// y el trigger solo cubre los INSERT).
+export function volunteerPendingReview(volunteerId: string, name: string): NewNotification {
+  return {
+    type: 'volunteer_pending_review',
+    title: 'Solicitud de voluntariado corregida',
+    body: `${name} volvió a enviar su solicitud.`,
+    data: { volunteerId },
   };
 }
 

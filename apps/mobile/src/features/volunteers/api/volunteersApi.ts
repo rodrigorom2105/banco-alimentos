@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 
+import { apiRequest } from '@/shared/lib/api';
 import { supabase } from '@/shared/lib/supabase';
 
 import type { MyVolunteerApplication, PickedFile, Weekday } from '../types';
@@ -29,15 +30,27 @@ async function upload(path: string, file: PickedFile) {
 }
 
 export const volunteersApi = {
-  // RLS solo deja ver la solicitud propia, así que basta filtrar por el id del usuario.
+  // RLS solo deja ver la solicitud propia, así que basta filtrar por el id del usuario. Se
+  // traen también disponibilidad y municipios para poder precargar el formulario si la
+  // persona vuelve a enviarla.
   async getMine(userId: string): Promise<MyVolunteerApplication | null> {
     const { data, error } = await supabase
       .from('volunteers')
-      .select('id, validation_status, rejection_reason, created_at')
+      .select(
+        `id, validation_status, rejection_reason, created_at,
+         available_days, available_from, available_to,
+         municipalities:volunteer_municipalities(municipality_id)`,
+      )
       .eq('user_id', userId)
       .maybeSingle();
     if (error) throw error;
-    return data;
+    if (!data) return null;
+
+    const { municipalities, ...application } = data;
+    return {
+      ...application,
+      municipalityIds: municipalities.map((m) => m.municipality_id),
+    };
   },
 
   /**
@@ -78,5 +91,36 @@ export const volunteersApi = {
     });
     if (error) throw error;
     return data as string;
+  },
+
+  /**
+   * Vuelve a enviar una solicitud rechazada.
+   *
+   * Pasa por el backend porque la base prohíbe que el usuario cambie su propio
+   * `validation_status`. Los archivos son opcionales: si no se eligieron nuevos, se conservan
+   * los que ya están en el bucket (la ruta es fija, así que el backend ni se enteraría).
+   */
+  async resubmit(
+    userId: string,
+    application: {
+      photo: PickedFile | null;
+      proofOfAddress: PickedFile | null;
+      days: Weekday[];
+      from: string;
+      to: string;
+      municipalityIds: number[];
+    },
+  ) {
+    if (application.photo) await upload(photoPath(userId), application.photo);
+    if (application.proofOfAddress) {
+      await upload(proofPath(userId, application.proofOfAddress), application.proofOfAddress);
+    }
+
+    return apiRequest<{ status: 'pending' }>('POST', '/volunteers/me/resubmit', {
+      availableDays: application.days,
+      availableFrom: `${application.from}:00`,
+      availableTo: `${application.to}:00`,
+      municipalityIds: application.municipalityIds,
+    });
   },
 };

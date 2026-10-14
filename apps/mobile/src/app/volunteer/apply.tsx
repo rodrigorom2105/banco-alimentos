@@ -8,13 +8,19 @@ import { colors, spacing } from '@/shared/theme';
 export default function VolunteerApplyScreen() {
   const { application, isLoading } = useMyApplication();
 
+  // Solo existe una solicitud por usuario (user_id es UNIQUE), así que esta pantalla sirve
+  // para dos cosas: crear la primera, o corregir una rechazada.
+  const canResubmit = application?.validation_status === 'rejected';
+
   return (
-    <Screen title="Ser voluntario">
+    <Screen title={canResubmit ? 'Corregir solicitud' : 'Ser voluntario'}>
       {isLoading ? (
         <ActivityIndicator style={styles.loading} color={colors.primary} />
-      ) : application ? (
-        // Solo puede existir una solicitud por usuario (user_id es UNIQUE). Si ya la envió,
-        // su estado se ve en "Mi voluntariado" (Fase 6).
+      ) : !application ? (
+        <VolunteerForm />
+      ) : canResubmit ? (
+        <VolunteerForm application={application} />
+      ) : (
         <View style={styles.existing}>
           <Placeholder
             title="Ya enviaste tu solicitud"
@@ -25,8 +31,6 @@ export default function VolunteerApplyScreen() {
             onPress={() => router.replace('/volunteer/dashboard')}
           />
         </View>
-      ) : (
-        <VolunteerForm />
       )}
     </Screen>
   );

@@ -1,11 +1,18 @@
 import {
   volunteerApproved,
+  volunteerReactivated,
   volunteerRejected,
   volunteerSuspended,
 } from '../../domain/notifications/Notification';
 import type { Notifier } from '../../domain/notifications/Notifier';
 import { ForbiddenError, NotFoundError } from '../../domain/shared/errors';
-import { approve, reject, suspend, type VolunteerStatus } from '../../domain/volunteers/Volunteer';
+import {
+  approve,
+  reactivate,
+  reject,
+  suspend,
+  type VolunteerStatus,
+} from '../../domain/volunteers/Volunteer';
 import type { VolunteerRepository } from '../../domain/volunteers/VolunteerRepository';
 import type { Actor } from '../ports';
 
@@ -62,6 +69,22 @@ export class RejectVolunteer {
       volunteer.userId,
       volunteerRejected(review.rejectionReason ?? reason),
     );
+    return { status: review.status };
+  }
+}
+
+export class ReactivateVolunteer {
+  constructor(
+    private readonly volunteers: VolunteerRepository,
+    private readonly notifier: Notifier,
+  ) {}
+
+  async execute(actor: Actor, volunteerId: string) {
+    assertAdmin(actor);
+    const volunteer = await findOrFail(this.volunteers, volunteerId);
+    const review = reactivate(volunteer, actor.userId);
+    await this.volunteers.saveReview(volunteerId, review);
+    await this.notifier.notify(volunteer.userId, volunteerReactivated());
     return { status: review.status };
   }
 }
