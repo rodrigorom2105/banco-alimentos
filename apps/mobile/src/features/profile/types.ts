@@ -26,4 +26,9 @@ export type HelpContext = {
     // "Mis campañas" cuando solo tiene una. null si tiene varias o ninguna.
     onlyName: string | null;
   };
+  myDonations: {
+    count: number;
+    // Solicitudes `pending` o `assigned`: las que todavía esperan algo del donador.
+    openCount: number;
+  };
 };

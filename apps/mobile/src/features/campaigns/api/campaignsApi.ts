@@ -33,6 +33,20 @@ export const campaignsApi = {
     return data;
   },
 
+  // Las campañas a las que un donador de ese municipio puede mandar su donativo. La
+  // restricción es del municipio, no de la distancia: el voluntario solo acepta
+  // recolecciones de sus propios municipios (decisión 9 del plan).
+  async listActiveByMunicipality(municipalityId: number): Promise<Campaign[]> {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select(CAMPAIGN_COLUMNS)
+      .eq('status', 'active')
+      .eq('municipality_id', municipalityId)
+      .order('name');
+    if (error) throw error;
+    return data;
+  },
+
   async getById(id: string): Promise<Campaign | null> {
     const { data, error } = await supabase
       .from('campaigns')

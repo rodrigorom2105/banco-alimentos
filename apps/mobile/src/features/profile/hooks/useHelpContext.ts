@@ -12,6 +12,7 @@ const GUEST: HelpContext = {
   isAdmin: false,
   volunteer: null,
   myCampaigns: { count: 0, onlyName: null },
+  myDonations: { count: 0, openCount: 0 },
 };
 
 export function useHelpContext() {

@@ -1,3 +1,4 @@
+export { campaignsApi } from './api/campaignsApi';
 export { CampaignDetail } from './components/CampaignDetail';
 export { CampaignForm } from './components/CampaignForm';
 export { ManageCampaign } from './components/ManageCampaign';

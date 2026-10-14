@@ -418,9 +418,24 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    // get_available_donation_requests() y get_request_volunteer() existen, pero su firma no está
-    // en el documento; se agregan al regenerar los tipos.
+    // get_available_donation_requests() existe en la base pero su firma no está en el
+    // documento; se agrega al regenerar los tipos.
     Functions: {
+      /**
+       * Quién va a recoger una donación. Solo lo puede llamar el donador de esa solicitud o
+       * un admin (lo valida la función). Devuelve 0 filas si no hay recolección activa.
+       * RLS no puede esconder columnas, y por eso esto es una función: el donador ve el
+       * nombre y la foto del voluntario, pero no sus documentos.
+       */
+      get_request_volunteer: {
+        Args: { p_request_id: string };
+        Returns: {
+          first_name: string;
+          last_name: string;
+          photo_path: string;
+          status: Database['public']['Enums']['pickup_status'];
+        }[];
+      };
       // 07b_apply_as_volunteer.sql: inserta la solicitud y sus municipios en una transacción.
       apply_as_volunteer: {
         Args: {
