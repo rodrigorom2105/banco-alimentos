@@ -82,6 +82,43 @@ export function reject(volunteer: Volunteer, reviewerId: string, reason: string)
   };
 }
 
+// Datos que el voluntario puede corregir al volver a enviar su solicitud. Los documentos no
+// van aquí: su ruta en el bucket es fija ({user_id}/photo.jpg), así que subir uno nuevo los
+// reemplaza sin que la base se entere.
+export type VolunteerResubmission = {
+  availableDays: Weekday[];
+  availableFrom: string;
+  availableTo: string;
+  municipalityIds: number[];
+};
+
+/**
+ * Volver a enviar una solicitud rechazada.
+ *
+ * Solo desde `rejected`: si está pendiente no hay nada que reenviar, y si está suspendida,
+ * reaplicar por cuenta propia sería saltarse la decisión de BAMX. Vuelve a `pending` y limpia
+ * el motivo del rechazo anterior, que ya no aplica a los datos nuevos.
+ */
+export function resubmit(volunteer: Volunteer, data: VolunteerResubmission): VolunteerResubmission {
+  if (volunteer.status !== 'rejected') {
+    throw new ConflictError(
+      volunteer.status === 'suspended'
+        ? 'Tu voluntariado está suspendido. Comunícate con BAMX para reactivarlo.'
+        : `Solo se vuelve a enviar una solicitud rechazada (estado actual: ${volunteer.status}).`,
+    );
+  }
+  if (data.municipalityIds.length === 0) {
+    throw new ValidationError('Elige al menos un municipio donde puedas recoger.');
+  }
+  if (data.availableDays.length === 0) {
+    throw new ValidationError('Elige al menos un día disponible.');
+  }
+  if (data.availableTo <= data.availableFrom) {
+    throw new ValidationError('La hora final debe ser posterior a la inicial.');
+  }
+  return data;
+}
+
 /**
  * Suspender. Solo a quien ya estaba aprobado: suspender a alguien pendiente o rechazado no
  * significa nada. El motivo se guarda en `rejection_reason`, que es la única columna de texto

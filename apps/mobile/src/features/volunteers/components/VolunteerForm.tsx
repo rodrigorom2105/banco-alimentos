@@ -20,7 +20,12 @@ import { colors, spacing } from '@/shared/theme';
 import { volunteersApi } from '../api/volunteersApi';
 import { WEEKDAY_LABELS, WEEKDAYS } from '../labels';
 import { chooseProofOfAddress, choosePhoto, takePhoto } from '../pickers';
-import type { PickedFile, VolunteerApplicationDraft, Weekday } from '../types';
+import type {
+  MyVolunteerApplication,
+  PickedFile,
+  VolunteerApplicationDraft,
+  Weekday,
+} from '../types';
 import { hasErrors, validateApplication, type ApplicationErrors } from '../validation';
 import { Checkbox } from './Checkbox';
 import { FilePickerField } from './FilePickerField';
@@ -37,15 +42,30 @@ const EMPTY: VolunteerApplicationDraft = {
   phone: '',
 };
 
+// Al volver a enviar se precarga lo que ya había: casi siempre el rechazo fue por un
+// documento, no por la disponibilidad, así que no tiene por qué capturarlo todo de nuevo.
+// Las casillas sí se vuelven a marcar: es una aceptación nueva, con fecha nueva.
+const draftFrom = (application: MyVolunteerApplication): VolunteerApplicationDraft => ({
+  ...EMPTY,
+  days: application.available_days,
+  from: application.available_from.slice(0, 5),
+  to: application.available_to.slice(0, 5),
+  municipalityIds: application.municipalityIds,
+});
+
 const toggle = <T,>(list: T[], value: T) =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
-export function VolunteerForm() {
+// Con `application` el formulario corrige esa solicitud rechazada; sin ella, crea una nueva.
+export function VolunteerForm({ application }: { application?: MyVolunteerApplication }) {
   const { user } = useAuth();
   const { profile, email, isLoading: isLoadingProfile } = useMyProfile();
   const { items: municipalities, error: municipalitiesError } = useMunicipalities();
 
-  const [draft, setDraft] = useState<VolunteerApplicationDraft>(EMPTY);
+  const isResubmission = !!application;
+  const [draft, setDraft] = useState<VolunteerApplicationDraft>(
+    application ? draftFrom(application) : EMPTY,
+  );
   const [errors, setErrors] = useState<ApplicationErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,7 +84,7 @@ export function VolunteerForm() {
     run().then((file) => file && update({ [key]: file }));
 
   const submit = async () => {
-    const found = validateApplication(draft, needsPhone);
+    const found = validateApplication(draft, needsPhone, isResubmission);
     setErrors(found);
     setSubmitError(null);
     if (hasErrors(found) || !user) return;
@@ -72,14 +92,26 @@ export function VolunteerForm() {
     setIsSubmitting(true);
     try {
       if (needsPhone) await profileApi.updatePhone(user.id, draft.phone.trim());
-      await volunteersApi.apply(user.id, {
-        photo: draft.photo!,
-        proofOfAddress: draft.proofOfAddress!,
+      const common = {
         days: draft.days,
         from: draft.from,
         to: draft.to,
         municipalityIds: draft.municipalityIds,
-      });
+      };
+      if (isResubmission) {
+        // Los archivos van como vengan: si no eligió nuevos, se conservan los del bucket.
+        await volunteersApi.resubmit(user.id, {
+          ...common,
+          photo: draft.photo,
+          proofOfAddress: draft.proofOfAddress,
+        });
+      } else {
+        await volunteersApi.apply(user.id, {
+          ...common,
+          photo: draft.photo!,
+          proofOfAddress: draft.proofOfAddress!,
+        });
+      }
       setIsDone(true);
     } catch (e) {
       setSubmitError(getErrorMessage(e, 'No se pudo enviar tu solicitud.'));
@@ -91,7 +123,7 @@ export function VolunteerForm() {
   if (isDone) {
     return (
       <SuccessState
-        title="¡Solicitud enviada!"
+        title={isResubmission ? '¡Solicitud reenviada!' : '¡Solicitud enviada!'}
         message="BAMX va a revisar tus datos y te avisaremos en cuanto haya respuesta. Puedes ver el estado de tu solicitud en Ayudar > Mi voluntariado."
         actionLabel="Entendido"
         onAction={() => router.replace('/help')}
@@ -173,7 +205,11 @@ export function VolunteerForm() {
       <Field
         label="Tu fotografía"
         error={errors.photo}
-        hint="Sirve para que quien dona sepa a quién esperar."
+        hint={
+          isResubmission
+            ? 'Ya tienes una guardada. Sube otra solo si quieres cambiarla.'
+            : 'Sirve para que quien dona sepa a quién esperar.'
+        }
       >
         <FilePickerField
           file={draft.photo}
@@ -189,7 +225,11 @@ export function VolunteerForm() {
       <Field
         label="Comprobante de domicilio"
         error={errors.proofOfAddress}
-        hint="Recibo de luz, agua o predial. PDF o imagen, máximo 5 MB."
+        hint={
+          isResubmission
+            ? 'Ya tienes uno guardado. Sube otro solo si quieres cambiarlo.'
+            : 'Recibo de luz, agua o predial. PDF o imagen, máximo 5 MB.'
+        }
       >
         <FilePickerField
           file={draft.proofOfAddress}
@@ -235,7 +275,11 @@ export function VolunteerForm() {
       </Field>
 
       {submitError && <Text style={styles.submitError}>{submitError}</Text>}
-      <Button title="Enviar solicitud" onPress={submit} loading={isSubmitting} />
+      <Button
+        title={isResubmission ? 'Volver a enviar' : 'Enviar solicitud'}
+        onPress={submit}
+        loading={isSubmitting}
+      />
     </FormScreen>
   );
 }

@@ -15,8 +15,9 @@ export type ApplicationErrors = Partial<
 
 const megabytes = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
 
-function fileError(file: PickedFile | null, missing: string): string | undefined {
-  if (!file) return missing;
+// `missing` en null = el archivo es opcional (ya hay uno guardado en el bucket).
+function fileError(file: PickedFile | null, missing: string | null): string | undefined {
+  if (!file) return missing ?? undefined;
   if (file.size !== null && file.size > MAX_FILE_BYTES) {
     return `El archivo pesa ${megabytes(file.size)}; el máximo es ${megabytes(MAX_FILE_BYTES)}.`;
   }
@@ -30,13 +31,19 @@ function fileError(file: PickedFile | null, missing: string): string | undefined
 export function validateApplication(
   draft: VolunteerApplicationDraft,
   needsPhone: boolean,
+  // true al volver a enviar: los documentos ya están en el bucket, así que elegir archivos
+  // nuevos es opcional. Si se eligen, se validan igual.
+  hasStoredFiles = false,
 ): ApplicationErrors {
   const errors: ApplicationErrors = {};
 
-  const photoError = fileError(draft.photo, 'Agrega una fotografía tuya.');
+  const photoError = fileError(draft.photo, hasStoredFiles ? null : 'Agrega una fotografía tuya.');
   if (photoError) errors.photo = photoError;
 
-  const proofError = fileError(draft.proofOfAddress, 'Agrega tu comprobante de domicilio.');
+  const proofError = fileError(
+    draft.proofOfAddress,
+    hasStoredFiles ? null : 'Agrega tu comprobante de domicilio.',
+  );
   if (proofError) errors.proofOfAddress = proofError;
   else if (draft.proofOfAddress && !ALLOWED_PROOF_TYPES.includes(draft.proofOfAddress.mimeType)) {
     errors.proofOfAddress = 'El comprobante debe ser una imagen o un PDF.';

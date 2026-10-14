@@ -71,6 +71,18 @@ export function volunteerRejected(reason: string): NewNotification {
   };
 }
 
+// Para los admins. El mismo aviso que manda el trigger de 06_notifications.sql cuando llega
+// una solicitud nueva; aquí se usa cuando alguien vuelve a enviar la suya (eso es un UPDATE,
+// y el trigger solo cubre los INSERT).
+export function volunteerPendingReview(volunteerId: string, name: string): NewNotification {
+  return {
+    type: 'volunteer_pending_review',
+    title: 'Solicitud de voluntariado corregida',
+    body: `${name} volvió a enviar su solicitud.`,
+    data: { volunteerId },
+  };
+}
+
 export function volunteerSuspended(reason: string): NewNotification {
   return {
     type: 'volunteer_suspended',

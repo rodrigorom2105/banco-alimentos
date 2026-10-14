@@ -1,6 +1,6 @@
 import { supabase } from '@/shared/lib/supabase';
 
-import type { MyRoles, Profile } from '../types';
+import type { HelpContext, MyRoles, Profile } from '../types';
 
 export const profileApi = {
   // RLS solo deja leer la fila propia, así que basta con filtrar por el id del usuario.
@@ -30,6 +30,43 @@ export const profileApi = {
     return {
       isAdmin: roles.data.some((r) => r.role === 'admin'),
       volunteerStatus: volunteer.data?.validation_status ?? null,
+    };
+  },
+
+  /**
+   * Contexto de la pantalla de Ayudar: rol, solicitud de voluntariado y campañas propias.
+   *
+   * Las tres consultas van en paralelo porque son independientes. RLS hace el filtrado: de
+   * `campaigns` solo llegan las del usuario (y de un admin llegarían todas, por eso se filtra
+   * explícitamente por `organizer_id`).
+   */
+  async getHelpContext(userId: string): Promise<HelpContext> {
+    const [roles, volunteer, campaigns] = await Promise.all([
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+      supabase
+        .from('volunteers')
+        .select('validation_status, rejection_reason, created_at')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase.from('campaigns').select('name').eq('organizer_id', userId),
+    ]);
+    if (roles.error) throw roles.error;
+    if (volunteer.error) throw volunteer.error;
+    if (campaigns.error) throw campaigns.error;
+
+    return {
+      isAdmin: roles.data.some((r) => r.role === 'admin'),
+      volunteer: volunteer.data
+        ? {
+            status: volunteer.data.validation_status,
+            submittedAt: volunteer.data.created_at,
+            rejectionReason: volunteer.data.rejection_reason,
+          }
+        : null,
+      myCampaigns: {
+        count: campaigns.data.length,
+        onlyName: campaigns.data.length === 1 ? campaigns.data[0].name : null,
+      },
     };
   },
 };

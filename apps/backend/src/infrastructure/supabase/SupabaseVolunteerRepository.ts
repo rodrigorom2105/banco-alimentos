@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
   Volunteer,
+  VolunteerResubmission,
   VolunteerReview,
   VolunteerStatus,
   Weekday,
@@ -63,6 +64,16 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
     return data ? toVolunteer(data) : null;
   }
 
+  async findByUserId(userId: string) {
+    const { data, error } = await this.db
+      .from('volunteers')
+      .select(COLUMNS)
+      .eq('user_id', userId)
+      .maybeSingle<VolunteerRow>();
+    if (error) throw error;
+    return data ? toVolunteer(data) : null;
+  }
+
   async listByStatus(status: VolunteerStatus | null) {
     let query = this.db.from('volunteers').select(COLUMNS).order('created_at', { ascending: true });
     if (status) query = query.eq('validation_status', status);
@@ -84,5 +95,38 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
       })
       .eq('id', id);
     if (error) throw error;
+  }
+
+  async saveResubmission(id: string, data: VolunteerResubmission) {
+    // Regresa a 'pending' y borra el rastro de la revisión anterior: el motivo del rechazo ya
+    // no aplica a estos datos nuevos.
+    const { error } = await this.db
+      .from('volunteers')
+      .update({
+        validation_status: 'pending',
+        rejection_reason: null,
+        reviewed_by: null,
+        reviewed_at: null,
+        available_days: data.availableDays,
+        available_from: data.availableFrom,
+        available_to: data.availableTo,
+      })
+      .eq('id', id);
+    if (error) throw error;
+
+    // Los municipios se reemplazan por completo: es más simple y predecible que calcular
+    // qué agregar y qué quitar.
+    const { error: deleteError } = await this.db
+      .from('volunteer_municipalities')
+      .delete()
+      .eq('volunteer_id', id);
+    if (deleteError) throw deleteError;
+
+    const { error: insertError } = await this.db
+      .from('volunteer_municipalities')
+      .insert(
+        data.municipalityIds.map((municipality_id) => ({ volunteer_id: id, municipality_id })),
+      );
+    if (insertError) throw insertError;
   }
 }

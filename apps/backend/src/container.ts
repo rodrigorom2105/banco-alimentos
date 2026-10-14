@@ -12,6 +12,7 @@ import {
   RespondSupportRequest,
 } from './application/support/reviewSupportRequest';
 import { GrantAdminRole } from './application/users/grantAdminRole';
+import { ResubmitVolunteerApplication } from './application/volunteers/resubmitVolunteerApplication';
 import {
   ApproveVolunteer,
   ListVolunteersForReview,
@@ -77,6 +78,10 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       approveVolunteer: new ApproveVolunteer(adapters.volunteers, adapters.notifier),
       rejectVolunteer: new RejectVolunteer(adapters.volunteers, adapters.notifier),
       suspendVolunteer: new SuspendVolunteer(adapters.volunteers, adapters.notifier),
+      resubmitVolunteerApplication: new ResubmitVolunteerApplication(
+        adapters.volunteers,
+        adapters.notifier,
+      ),
       listSupportRequestsForReview: new ListSupportRequestsForReview(adapters.support),
       respondSupportRequest: new RespondSupportRequest(adapters.support, adapters.notifier),
       deliverSupportRequest: new DeliverSupportRequest(adapters.support, adapters.notifier),
