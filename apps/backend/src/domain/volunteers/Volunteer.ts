@@ -68,6 +68,36 @@ export function approve(volunteer: Volunteer, reviewerId: string): VolunteerRevi
   };
 }
 
+/**
+ * Reactivar a un voluntario suspendido.
+ *
+ * Sin esto, suspender no tendría vuelta: `approve` solo funciona desde `pending` y la persona
+ * no puede reenviar su solicitud (reaplicar por cuenta propia sería saltarse la suspensión).
+ * Es decir, un error al suspender quedaba sin forma de deshacerse desde la app.
+ *
+ * Pide municipios por la misma razón que `approve`: sin cobertura no se le podría asignar
+ * ninguna recolección, así que reactivarlo no serviría de nada.
+ */
+export function reactivate(volunteer: Volunteer, reviewerId: string): VolunteerReview {
+  if (volunteer.status !== 'suspended') {
+    throw new ConflictError(
+      `Solo se reactiva a un voluntario suspendido (estado actual: ${volunteer.status}).`,
+    );
+  }
+  if (volunteer.municipalityIds.length === 0) {
+    throw new ConflictError(
+      'La solicitud no tiene municipios de cobertura, así que no se le podrían asignar recolecciones.',
+    );
+  }
+  return {
+    status: 'approved',
+    reviewedBy: reviewerId,
+    reviewedAt: new Date(),
+    // Se limpia el motivo de la suspensión: ya no describe su situación.
+    rejectionReason: null,
+  };
+}
+
 export function reject(volunteer: Volunteer, reviewerId: string, reason: string): VolunteerReview {
   if (volunteer.status !== 'pending') {
     throw new ConflictError(

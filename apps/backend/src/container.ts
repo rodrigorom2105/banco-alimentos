@@ -16,6 +16,7 @@ import { ResubmitVolunteerApplication } from './application/volunteers/resubmitV
 import {
   ApproveVolunteer,
   ListVolunteersForReview,
+  ReactivateVolunteer,
   RejectVolunteer,
   SuspendVolunteer,
 } from './application/volunteers/reviewVolunteer';
@@ -78,6 +79,7 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       approveVolunteer: new ApproveVolunteer(adapters.volunteers, adapters.notifier),
       rejectVolunteer: new RejectVolunteer(adapters.volunteers, adapters.notifier),
       suspendVolunteer: new SuspendVolunteer(adapters.volunteers, adapters.notifier),
+      reactivateVolunteer: new ReactivateVolunteer(adapters.volunteers, adapters.notifier),
       resubmitVolunteerApplication: new ResubmitVolunteerApplication(
         adapters.volunteers,
         adapters.notifier,

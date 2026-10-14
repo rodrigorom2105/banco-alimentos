@@ -16,6 +16,7 @@ import { ResubmitVolunteerApplication } from './resubmitVolunteerApplication';
 import {
   ApproveVolunteer,
   ListVolunteersForReview,
+  ReactivateVolunteer,
   RejectVolunteer,
   SuspendVolunteer,
 } from './reviewVolunteer';
@@ -30,6 +31,7 @@ const setup = (repo: InMemoryVolunteerRepository) => {
     approve: new ApproveVolunteer(repo, notifier),
     reject: new RejectVolunteer(repo, notifier),
     suspend: new SuspendVolunteer(repo, notifier),
+    reactivate: new ReactivateVolunteer(repo, notifier),
   };
 };
 
@@ -124,6 +126,47 @@ describe('SuspendVolunteer', () => {
     await expect(suspend.execute(admin, VOLUNTEER_ID, '  ')).rejects.toThrow(
       /motivo para suspender/,
     );
+  });
+});
+
+// Sin esto, suspender no tendría vuelta: `approve` solo funciona desde `pending` y la persona
+// no puede reenviar su solicitud. Un error al suspender quedaba sin forma de deshacerse.
+describe('ReactivateVolunteer', () => {
+  it('devuelve a approved a un suspendido y le avisa', async () => {
+    const repo = new InMemoryVolunteerRepository([
+      makeVolunteer({ status: 'suspended', rejectionReason: 'Canceló tres recolecciones.' }),
+    ]);
+    const { reactivate, notifier } = setup(repo);
+
+    await expect(reactivate.execute(admin, VOLUNTEER_ID)).resolves.toEqual({ status: 'approved' });
+
+    const volunteer = await repo.findById(VOLUNTEER_ID);
+    expect(volunteer?.status).toBe('approved');
+    // El motivo de la suspensión ya no describe su situación.
+    expect(volunteer?.rejectionReason).toBeNull();
+    expect(notifier.sent[0].notification.title).toContain('activo otra vez');
+  });
+
+  it('no reactiva a quien no está suspendido', async () => {
+    const repo = new InMemoryVolunteerRepository([makeVolunteer({ status: 'approved' })]);
+    const { reactivate } = setup(repo);
+    await expect(reactivate.execute(admin, VOLUNTEER_ID)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  // Mismo motivo que al aprobar: sin cobertura no se le podría asignar nada.
+  it('no reactiva a quien se quedó sin municipios', async () => {
+    const repo = new InMemoryVolunteerRepository([
+      makeVolunteer({ status: 'suspended', municipalityIds: [] }),
+    ]);
+    const { reactivate } = setup(repo);
+    await expect(reactivate.execute(admin, VOLUNTEER_ID)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it('solo admins, y sin notificar si no lo es', async () => {
+    const repo = new InMemoryVolunteerRepository([makeVolunteer({ status: 'suspended' })]);
+    const { reactivate, notifier } = setup(repo);
+    await expect(reactivate.execute(stranger, VOLUNTEER_ID)).rejects.toBeInstanceOf(ForbiddenError);
+    expect(notifier.sent).toHaveLength(0);
   });
 });
 

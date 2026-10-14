@@ -47,6 +47,12 @@ export function volunteersRoutes({ useCases }: Container) {
     res.json(await useCases.rejectVolunteer.execute(getActor(res), id, reason));
   });
 
+  // Levantar una suspensión. Sin motivo: lo que se explica es castigar, no perdonar.
+  router.post('/admin/volunteers/:id/reactivate', async (req, res) => {
+    const { id } = idParams.parse(req.params);
+    res.json(await useCases.reactivateVolunteer.execute(getActor(res), id));
+  });
+
   router.post('/admin/volunteers/:id/suspend', async (req, res) => {
     const { id } = idParams.parse(req.params);
     const { reason } = reasonBody.parse(req.body);

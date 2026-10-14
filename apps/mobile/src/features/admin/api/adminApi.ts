@@ -39,6 +39,11 @@ export const adminApi = {
     });
   },
 
+  // Levanta una suspensión y lo devuelve a `approved`.
+  reactivateVolunteer(id: string) {
+    return apiRequest<{ status: VolunteerStatus }>('POST', `/admin/volunteers/${id}/reactivate`);
+  },
+
   suspendVolunteer(id: string, reason: string) {
     return apiRequest<{ status: VolunteerStatus }>('POST', `/admin/volunteers/${id}/suspend`, {
       reason,

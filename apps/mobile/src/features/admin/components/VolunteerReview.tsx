@@ -39,18 +39,26 @@ export function VolunteerReview({ volunteer, onChanged }: Props) {
     .filter((m) => volunteer.municipalityIds.includes(m.id))
     .map((m) => m.name);
 
-  const approve = async () => {
+  // Aprobar y reactivar comparten el flujo: un botón que no pide nada más y recarga al
+  // terminar. Lo que cambia es el endpoint y el mensaje de error.
+  const run = async (task: () => Promise<unknown>, fallback: string) => {
     setIsApproving(true);
     setError(null);
     try {
-      await adminApi.approveVolunteer(volunteer.id);
+      await task();
       onChanged();
     } catch (e) {
-      setError(getErrorMessage(e, 'No se pudo aprobar la solicitud.'));
+      setError(getErrorMessage(e, fallback));
     } finally {
       setIsApproving(false);
     }
   };
+
+  const approve = () =>
+    run(() => adminApi.approveVolunteer(volunteer.id), 'No se pudo aprobar la solicitud.');
+
+  const reactivate = () =>
+    run(() => adminApi.reactivateVolunteer(volunteer.id), 'No se pudo reactivar al voluntario.');
 
   const sendPrompt = async (reason: string) => {
     if (prompt === 'reject') await adminApi.rejectVolunteer(volunteer.id, reason);
@@ -136,6 +144,12 @@ export function VolunteerReview({ volunteer, onChanged }: Props) {
 
         {volunteer.status === 'approved' && (
           <Button title="Suspender" variant="outline" onPress={() => setPrompt('suspend')} />
+        )}
+
+        {/* Sin esto, suspender no tendría vuelta: aprobar solo funciona desde `pending` y la
+            persona no puede reenviar su solicitud estando suspendida. */}
+        {volunteer.status === 'suspended' && (
+          <Button title="Reactivar voluntario" onPress={reactivate} loading={isApproving} />
         )}
       </ScrollView>
 

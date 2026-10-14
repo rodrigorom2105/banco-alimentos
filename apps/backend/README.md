@@ -69,6 +69,8 @@ Todos, excepto `/health`, requieren `Authorization: Bearer <access token de Supa
 | POST   | `/admin/volunteers/:id/approve`       | admin               | Aprueba (exige al menos un municipio)                   |
 | POST   | `/admin/volunteers/:id/reject`        | admin               | Rechaza. Body: `{ "reason": "..." }`                    |
 | POST   | `/admin/volunteers/:id/suspend`       | admin               | Suspende a un aprobado. Body: `{ "reason": "..." }`     |
+| POST   | `/admin/volunteers/:id/reactivate`    | admin               | Levanta una suspensión y lo devuelve a `approved`       |
+| POST   | `/volunteers/me/resubmit`             | dueño               | Reenvía su solicitud rechazada con los datos corregidos |
 | GET    | `/admin/support-requests?status=`     | admin               | Lista solicitudes de apoyo de las campañas              |
 | POST   | `/admin/support-requests/:id/respond` | admin               | Body: `{ "approved": bool, "message": "..." }`          |
 | POST   | `/admin/support-requests/:id/deliver` | admin               | Marca un apoyo aprobado como entregado                  |

@@ -62,6 +62,17 @@ export function volunteerApproved(): NewNotification {
   };
 }
 
+// Reusa el tipo `volunteer_approved` en lugar de pedir un valor nuevo en el enum de la base:
+// para la app significan lo mismo (tu acceso está activo) y llevan a la misma pantalla.
+export function volunteerReactivated(): NewNotification {
+  return {
+    type: 'volunteer_approved',
+    title: 'Tu voluntariado está activo otra vez',
+    body: 'BAMX levantó la suspensión. Ya puedes volver a recibir recolecciones.',
+    data: {},
+  };
+}
+
 export function volunteerRejected(reason: string): NewNotification {
   return {
     type: 'volunteer_rejected',
