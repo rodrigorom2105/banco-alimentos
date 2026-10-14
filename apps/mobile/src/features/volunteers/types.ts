@@ -12,14 +12,21 @@ export type PickedFile = {
   size: number | null;
 };
 
-// Lo que el usuario llenó en el formulario.
-export type VolunteerApplicationDraft = {
-  photo: PickedFile | null;
-  proofOfAddress: PickedFile | null;
+/**
+ * Cuándo y dónde puede recoger. Es la parte de la solicitud que la asignación automática usa
+ * para elegirlo (Fase 8), y la única que puede corregir después de ser aprobado.
+ */
+export type AvailabilityDraft = {
   days: Weekday[];
   from: string; // 'HH:MM'
   to: string; // 'HH:MM'
   municipalityIds: number[];
+};
+
+// Lo que el usuario llenó en el formulario de solicitud.
+export type VolunteerApplicationDraft = AvailabilityDraft & {
+  photo: PickedFile | null;
+  proofOfAddress: PickedFile | null;
   acceptedPrivacy: boolean;
   acceptedTerms: boolean;
   // Solo se usa si el perfil todavía no tiene teléfono.

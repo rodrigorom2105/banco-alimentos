@@ -8,7 +8,11 @@ import type {
   NewInstitutionalCampaign,
 } from '../domain/campaigns/Campaign';
 import type { CampaignRepository } from '../domain/campaigns/CampaignRepository';
-import type { DonationRequest, OpenDonationRequest } from '../domain/donations/DonationRequest';
+import type {
+  DonationRequest,
+  DonationRequestEdit,
+  OpenDonationRequest,
+} from '../domain/donations/DonationRequest';
 import type { DonationRequestRepository } from '../domain/donations/DonationRequestRepository';
 import type { NewNotification } from '../domain/notifications/Notification';
 import type { Notifier } from '../domain/notifications/Notifier';
@@ -188,8 +192,23 @@ export class InMemoryDonationRequestRepository implements DonationRequestReposit
     private readonly open: OpenDonationRequest[] = [],
   ) {}
 
+  readonly edits: { id: string; edit: DonationRequestEdit }[] = [];
+
   async findById(id: string) {
     return this.requests.find((r) => r.id === id) ?? null;
+  }
+
+  async saveDetails(id: string, edit: DonationRequestEdit) {
+    this.edits.push({ id, edit });
+    const request = this.requests.find((r) => r.id === id);
+    if (request) {
+      request.municipalityId = edit.municipalityId;
+      request.coordinates = { latitude: edit.latitude, longitude: edit.longitude };
+      request.preferredDate = edit.preferredDate;
+      request.preferredTimeFrom = edit.preferredTimeFrom;
+      request.preferredTimeTo = edit.preferredTimeTo;
+      request.preferredCampaignId = edit.preferredCampaignId;
+    }
   }
 
   async listOpenForAssignment() {

@@ -9,6 +9,7 @@ import {
   AutoAssignPickup,
   ListUnassignedDonationRequests,
 } from './application/donations/autoAssignPickup';
+import { UpdateDonationRequest } from './application/donations/updateDonationRequest';
 import {
   AcceptPickup,
   DeclinePickup,
@@ -142,6 +143,15 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       ),
       // Rechazar reasigna: por eso recibe el caso de uso de asignación, no un repositorio.
       declinePickup: new DeclinePickup(adapters.pickups, adapters.volunteers, autoAssignPickup),
+      // Editar también puede reasignar, si cambia el día, el horario o dónde se recoge.
+      updateDonationRequest: new UpdateDonationRequest(
+        adapters.donationRequests,
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.notifier,
+        autoAssignPickup,
+        adapters.clock,
+      ),
     },
   };
 }

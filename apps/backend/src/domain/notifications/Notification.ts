@@ -144,6 +144,23 @@ export function pickupAccepted(request: { id: string }, volunteerName: string): 
 }
 
 /**
+ * Para el voluntario: el donador cambió la fecha o el horario, así que la propuesta que tenía
+ * pendiente ya no aplica.
+ *
+ * Se le avisa aunque no la hubiera contestado: recibió un "tienes una recolección por
+ * confirmar" y si desapareciera en silencio pensaría que la app se rompió. Si los datos nuevos
+ * le siguen quedando, el sistema se la vuelve a proponer y recibe un aviso nuevo.
+ */
+export function pickupWithdrawn(): NewNotification {
+  return {
+    type: 'pickup_cancelled',
+    title: 'Una recolección que te propusimos cambió',
+    body: 'Quien dona modificó la fecha o el horario, así que la propuesta se canceló. Si los datos nuevos te quedan, te la volvemos a proponer.',
+    data: {},
+  };
+}
+
+/**
  * Para los admins: no se encontró a ningún voluntario que pudiera tomar la donación.
  *
  * `data` lleva `donationRequestId` y NO `requestId` a propósito: con `requestId` la app mandaría

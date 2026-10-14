@@ -2,7 +2,13 @@ import { apiRequest } from '@/shared/lib/api';
 import type { TablesInsert } from '@/shared/lib/database.types';
 import { supabase } from '@/shared/lib/supabase';
 
-import type { AssignmentResult, MyDonationRequest, RequestVolunteer } from '../types';
+import type {
+  AssignmentResult,
+  DonationDetailsEdit,
+  MyDonationRequest,
+  RequestVolunteer,
+  UpdateResult,
+} from '../types';
 
 export type NewDonationRequest = Omit<TablesInsert<'donation_requests'>, 'donor_id'>;
 export type NewDonationItem = Omit<TablesInsert<'donation_items'>, 'request_id'>;
@@ -13,6 +19,7 @@ const REQUEST_COLUMNS = `
   id, address, address_references, preferred_date,
   preferred_time_from, preferred_time_to, notes,
   status, cancellation_reason, created_at,
+  municipality_id, latitude, longitude, preferred_campaign_id,
   municipality:municipalities(name),
   preferred_campaign:campaigns(name),
   pickups(status, accepted_at),
@@ -70,6 +77,18 @@ export const donationsApi = {
       .maybeSingle();
     if (error) throw error;
     return data as MyDonationRequest | null;
+  },
+
+  /**
+   * Corrige los datos de la recolección.
+   *
+   * Pasa por el backend y no directo a Supabase porque la base solo deja al donador editar
+   * mientras la solicitud esté `pending`, y en cuanto se le propone a un voluntario pasa a
+   * `assigned`. Sin esto perdería la posibilidad de corregir casi de inmediato, aunque nadie se
+   * hubiera comprometido. El backend también decide si hay que reasignar.
+   */
+  updateDetails(id: string, edit: DonationDetailsEdit) {
+    return apiRequest<UpdateResult>('PATCH', `/donation-requests/${id}`, edit);
   },
 
   /**

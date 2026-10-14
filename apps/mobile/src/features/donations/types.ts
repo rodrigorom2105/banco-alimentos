@@ -1,8 +1,33 @@
+import type { Campaign } from '@/features/campaigns';
+import type { AddressValue } from '@/shared/components';
 import type { Enums } from '@/shared/lib/database.types';
 
 import type { ItemUnit } from './labels';
 
 export type DonationRequestStatus = Enums<'donation_request_status'>;
+
+/**
+ * Dónde, cuándo y a qué punto de acopio. Es la parte de la solicitud que se captura al crearla
+ * y la única que el donador puede corregir después.
+ */
+export type DonationDetailsDraft = {
+  location: AddressValue;
+  campaignId: string;
+  references: string;
+  date: string;
+  timeFrom: string;
+  timeTo: string;
+  notes: string;
+};
+
+export type DonationDetailsErrors = Partial<Record<'address' | 'date' | 'time', string>>;
+
+// Lo que devuelve `useCampaignsForDonation`, para pasarlo a los campos compartidos.
+export type Destinations = {
+  campaigns: Campaign[];
+  isLoading: boolean;
+  error: string | null;
+};
 
 export type DonationItem = {
   id: string;
@@ -19,6 +44,23 @@ export type AssignmentResult =
   | { assigned: true; pickupId: string; volunteerName: string }
   | { assigned: false; reason: 'no_candidate' };
 
+// Lo que viaja a PATCH /donation-requests/:id, en camelCase porque lo recibe el backend.
+export type DonationDetailsEdit = {
+  address: string;
+  addressReferences: string | null;
+  municipalityId: number;
+  latitude: number;
+  longitude: number;
+  preferredDate: string;
+  preferredTimeFrom: string;
+  preferredTimeTo: string;
+  notes: string | null;
+  preferredCampaignId: string | null;
+};
+
+// `reassigned` dice si, después del cambio, la donación volvió a encontrar voluntario.
+export type UpdateResult = { updated: true; reassigned: boolean };
+
 // La recolección de la solicitud. `accepted_at` en null = se le propuso a un voluntario pero
 // todavía no confirma, así que para el donador sigue sin haber nadie comprometido.
 export type DonationPickup = {
@@ -31,6 +73,12 @@ export type MyDonationRequest = {
   id: string;
   address: string;
   address_references: string | null;
+  // Los valores crudos, además de los nombres: son los que necesita el formulario de edición
+  // para precargarse (el `AddressPicker` trabaja con coordenadas y con el id del municipio).
+  municipality_id: number;
+  latitude: number;
+  longitude: number;
+  preferred_campaign_id: string | null;
   preferred_date: string;
   preferred_time_from: string;
   preferred_time_to: string;

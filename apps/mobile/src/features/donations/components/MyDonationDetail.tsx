@@ -104,6 +104,17 @@ export function MyDonationDetail({ donation, onChanged }: Props) {
           ))}
         </View>
 
+        {/* Editar solo mientras nadie se haya comprometido. Si el voluntario ya confirmó, el
+            backend rechaza el cambio: organizó su día alrededor de esa hora. */}
+        {isOpen(donation.status) && !pickup?.accepted_at && (
+          <Button
+            title="Editar"
+            onPress={() =>
+              router.push({ pathname: '/donation/[id]/edit', params: { id: donation.id } })
+            }
+          />
+        )}
+
         {isOpen(donation.status) && (
           <Button
             title="Cancelar solicitud"

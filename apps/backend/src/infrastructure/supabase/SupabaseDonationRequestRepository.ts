@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
   DonationRequest,
+  DonationRequestEdit,
   DonationRequestStatus,
   OpenDonationRequest,
 } from '../../domain/donations/DonationRequest';
@@ -80,6 +81,27 @@ export class SupabaseDonationRequestRepository implements DonationRequestReposit
       .maybeSingle<RequestRow>();
     if (error) throw error;
     return data ? toRequest(data) : null;
+  }
+
+  // No se manda `status`: editar los datos no cambia en qué va la solicitud. El trigger
+  // `donation_requests_before_write` revalida fecha, municipio y punto de acopio.
+  async saveDetails(id: string, edit: DonationRequestEdit) {
+    const { error } = await this.db
+      .from('donation_requests')
+      .update({
+        address: edit.address,
+        address_references: edit.addressReferences,
+        municipality_id: edit.municipalityId,
+        latitude: edit.latitude,
+        longitude: edit.longitude,
+        preferred_date: edit.preferredDate,
+        preferred_time_from: edit.preferredTimeFrom,
+        preferred_time_to: edit.preferredTimeTo,
+        notes: edit.notes,
+        preferred_campaign_id: edit.preferredCampaignId,
+      })
+      .eq('id', id);
+    if (error) throw error;
   }
 
   /**

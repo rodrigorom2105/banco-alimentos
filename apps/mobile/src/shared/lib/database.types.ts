@@ -441,6 +441,19 @@ export type Database = {
           accepted_at: string | null;
         }[];
       };
+      /**
+       * 11_update_my_availability.sql: cambia días, horario y municipios del voluntario que
+       * llama, en una transacción. No toca `validation_status`: un aprobado sigue aprobado.
+       */
+      update_my_availability: {
+        Args: {
+          p_available_days: Database['public']['Enums']['weekday'][];
+          p_available_from: string;
+          p_available_to: string;
+          p_municipality_ids: number[];
+        };
+        Returns: undefined;
+      };
       // 07b_apply_as_volunteer.sql: inserta la solicitud y sus municipios en una transacción.
       apply_as_volunteer: {
         Args: {

@@ -55,16 +55,20 @@ export class AutoAssignPickup {
   }
 
   /**
-   * Lo llama otro caso de uso, no una persona: cuando un voluntario rechaza la propuesta, la
-   * donación se le ofrece a alguien más. No hay permisos que revisar porque no hay nadie
-   * pidiéndolo; la decisión ya la tomó el sistema.
+   * Lo llama otro caso de uso, no una persona: cuando un voluntario rechaza la propuesta o
+   * cuando el donador cambia la fecha, la donación se le ofrece a alguien más. No hay permisos
+   * que revisar porque no hay nadie pidiéndolo; la decisión ya la tomó el sistema.
+   *
+   * `allow` perdona una cancelación anterior. Hace falta porque la base no distingue quién
+   * canceló una recolección: si el sistema retira una propuesta para reprogramarla, ese
+   * voluntario quedaría marcado como "ya la rechazó" para siempre, cuando nunca dijo que no.
    */
   async executeAsSystem(
     requestId: string,
-    excludeVolunteerIds: string[] = [],
+    options: { exclude?: string[]; allow?: string[] } = {},
   ): Promise<AssignmentResult> {
     const request = await this.findOrFail(requestId);
-    return this.assign(request, excludeVolunteerIds);
+    return this.assign(request, options.exclude ?? [], options.allow ?? []);
   }
 
   private async findOrFail(requestId: string) {
@@ -76,6 +80,7 @@ export class AutoAssignPickup {
   private async assign(
     request: DonationRequest,
     excludeVolunteerIds: string[],
+    allowVolunteerIds: string[] = [],
   ): Promise<AssignmentResult> {
     if (request.status === 'cancelled' || request.status === 'completed') {
       throw new ConflictError(
@@ -91,7 +96,7 @@ export class AutoAssignPickup {
       // ofrecérsela otra vez solo retrasa la donación.
       ...(await this.pickups.listDeclinedVolunteerIds(request.id)),
       ...(await this.releaseExpiredOffer(request)),
-    ];
+    ].filter((id) => !allowVolunteerIds.includes(id));
 
     const destination = chooseDestination(
       request,

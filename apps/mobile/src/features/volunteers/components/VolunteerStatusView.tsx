@@ -14,6 +14,7 @@ type Props = {
   application: MyVolunteerApplication;
   // Solo se usa cuando la solicitud fue rechazada.
   onResubmit: () => void;
+  onEditAvailability: () => void;
 };
 
 const hour = (time: string) => time.slice(0, 5);
@@ -47,8 +48,10 @@ function Card({
  * voluntario aprobado (recolecciones y ruta) llega en la Fase 9; por ahora se le confirma que
  * está dentro y se le muestra lo que declaró.
  */
-export function VolunteerStatusView({ application, onResubmit }: Props) {
+export function VolunteerStatusView({ application, onResubmit, onEditAvailability }: Props) {
   const { items: municipalities } = useMunicipalities();
+  const canEditAvailability =
+    application.validation_status === 'pending' || application.validation_status === 'approved';
   const covered = municipalities
     .filter((m) => application.municipalityIds.includes(m.id))
     .map((m) => m.name);
@@ -91,19 +94,12 @@ export function VolunteerStatusView({ application, onResubmit }: Props) {
         </Card>
       )}
 
-      {application.validation_status === 'approved' && (
-        <>
-          <Card icon="check-circle-outline" tone="success" title="¡Eres voluntario de BAMX!">
-            <Text style={styles.text}>
-              Cuando alguien de tu zona done desde casa, te vamos a proponer la recolección y
-              recibirás una notificación. Tú decides si la aceptas.
-            </Text>
-          </Card>
-          {/* La ruta del día y los pasos de la recolección (en camino, recolectado, entregado)
-              llegan en la Fase 9. */}
-          <MyPickupList />
-        </>
-      )}
+      {/* Aprobado no lleva tarjeta de bienvenida: la felicitación se dio una vez, por
+          notificación, el día que lo aprobaron. Dejarla fija aquí para siempre ocupa la
+          pantalla con algo que ya sabe, encima de lo que de verdad viene a ver. Su lista de
+          recolecciones ya explica qué sigue cuando está vacía. La ruta del día y los pasos de
+          la recolección llegan en la Fase 9. */}
+      {application.validation_status === 'approved' && <MyPickupList />}
 
       <View style={styles.summary}>
         <Text style={styles.summaryTitle}>Lo que registraste</Text>
@@ -113,6 +109,13 @@ export function VolunteerStatusView({ application, onResubmit }: Props) {
         <Text style={[styles.text, styles.left]}>
           {covered.length > 0 ? covered.join(', ') : 'Sin municipios registrados'}
         </Text>
+        {/* Editable mientras esté en revisión o aprobado. De esto depende qué recolecciones se
+            le proponen, así que tiene que poder corregirlo sin pedirle nada a nadie. */}
+        {canEditAvailability && (
+          <View style={styles.summaryAction}>
+            <Button title="Editar disponibilidad" variant="outline" onPress={onEditAvailability} />
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -148,4 +151,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   summaryTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
+  summaryAction: { marginTop: spacing.md },
 });

@@ -311,6 +311,62 @@ describe('API HTTP', () => {
     expect((await call('/admin/donation-requests', { token: 'token-donor' })).status).toBe(403);
   });
 
+  it('el donador corrige su solicitud', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-donor',
+      body: JSON.stringify({
+        address: 'Av. Vallarta 1234',
+        municipalityId: 1,
+        latitude: 20.6736,
+        longitude: -103.344,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: '10:00:00',
+        preferredTimeTo: '12:00:00',
+        notes: 'Portón azul',
+      }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ updated: true });
+  });
+
+  it('un extraño no puede editar la solicitud de otro (403)', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-organizer',
+      body: JSON.stringify({
+        address: 'Calle 1',
+        municipalityId: 1,
+        latitude: 20.6,
+        longitude: -103.3,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: '10:00:00',
+        preferredTimeTo: '12:00:00',
+      }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('editar con un horario inválido responde 400', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-donor',
+      body: JSON.stringify({
+        address: 'Calle 1',
+        municipalityId: 1,
+        latitude: 20.6,
+        longitude: -103.3,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: 'mañana',
+        preferredTimeTo: '12:00:00',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('el voluntario acepta la recolección que se le propuso', async () => {
     const { call, pickups } = await start();
     const res = await call(`/pickups/${PICKUP_ID}/accept`, {

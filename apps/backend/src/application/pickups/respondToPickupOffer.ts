@@ -71,7 +71,9 @@ export class DeclinePickup {
     // punto de acopio del municipio se desactivó), el voluntario no tiene por qué cargar con
     // ese error: su solicitud vuelve a `pending` y el admin la ve en el panel.
     try {
-      const result = await this.autoAssign.executeAsSystem(pickup.requestId, [volunteer.id]);
+      const result = await this.autoAssign.executeAsSystem(pickup.requestId, {
+        exclude: [volunteer.id],
+      });
       return { declined: true as const, reassigned: result.assigned };
     } catch (error) {
       console.error('No se pudo reasignar la solicitud %s:', pickup.requestId, error);
