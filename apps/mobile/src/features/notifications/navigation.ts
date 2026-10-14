@@ -48,8 +48,10 @@ export function hrefFor(notification: Notification): Href | null {
     case 'pickup_delivered':
       return '/volunteer/dashboard';
 
-    // Su pantalla llega en la Fase 8 (asignación automática).
+    // Aviso para admins. No usa `requestId` a propósito (ver `donationUnassigned` en el
+    // backend): con esa llave caería en "Mis donaciones", que es del donador y RLS no le deja
+    // ver. Lo que el admin necesita es el panel, donde puede reintentar la asignación.
     case 'donation_unassigned':
-      return null;
+      return '/admin/donations';
   }
 }

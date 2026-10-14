@@ -19,6 +19,15 @@ const schema = z.object({
     }),
   // Orígenes permitidos para CORS (separados por coma); vacío = sin restricción en desarrollo.
   CORS_ORIGINS: z.string().default(''),
+
+  // Topes de la asignación automática de recolecciones (Fase 8). Cuidan las horas de servicio
+  // del voluntario, así que BAMX los va a querer ajustar sin tocar código.
+  ASSIGNMENT_MAX_PICKUPS_PER_DAY: z.coerce.number().int().positive().default(5),
+  ASSIGNMENT_MAX_ROUTE_KM: z.coerce.number().positive().default(25),
+  ASSIGNMENT_MAX_PICKUPS_PER_MONTH: z.coerce.number().int().positive().default(15),
+  // Cuántas horas tiene el voluntario para confirmar una recolección antes de que se le
+  // ofrezca a otra persona. El tope de 24 es a propósito: más allá, la donación se enfría.
+  ASSIGNMENT_OFFER_HOURS: z.coerce.number().int().min(1).max(24).default(12),
 });
 
 export type Env = z.infer<typeof schema>;

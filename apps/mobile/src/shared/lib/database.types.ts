@@ -349,7 +349,10 @@ export type Database = {
           volunteer_id: string;
           destination_campaign_id: string;
           status: Database['public']['Enums']['pickup_status'];
+          // `assigned_at` es cuándo se le propuso al voluntario y `accepted_at` cuándo la
+          // aceptó (09_pickup_acceptance.sql). En null = propuesta sin responder.
           assigned_at: string;
+          accepted_at: string | null;
           on_the_way_at: string | null;
           collected_at: string | null;
           delivered_at: string | null;
@@ -434,6 +437,8 @@ export type Database = {
           last_name: string;
           photo_path: string;
           status: Database['public']['Enums']['pickup_status'];
+          // 10_fix_request_volunteer.sql. En null = se le propuso pero todavía no confirma.
+          accepted_at: string | null;
         }[];
       };
       // 07b_apply_as_volunteer.sql: inserta la solicitud y sus municipios en una transacción.

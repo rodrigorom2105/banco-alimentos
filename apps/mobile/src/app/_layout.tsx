@@ -24,6 +24,7 @@ const SIGNED_IN_SCREENS = [
   'admin/index',
   'admin/campaigns',
   'admin/support',
+  'admin/donations',
   'admin/volunteers/index',
   'admin/volunteers/[id]',
   'admin/centers/new',

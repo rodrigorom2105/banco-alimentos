@@ -37,6 +37,35 @@ export type SupportRequestForReview = {
   createdAt: string;
 };
 
+export type DonationRequestStatus = Enums<'donation_request_status'>;
+export type PickupStatus = Enums<'pickup_status'>;
+
+/**
+ * Una donación sin voluntario, como la devuelve GET /admin/donation-requests?unassigned=true.
+ *
+ * `offer` es la propuesta que un voluntario dejó sin responder, y por eso la solicitud sigue
+ * atorada. Si viene en null, nadie la tomó nunca.
+ */
+export type UnassignedDonation = {
+  id: string;
+  donorName: string;
+  address: string;
+  municipalityName: string;
+  preferredDate: string;
+  preferredTimeFrom: string;
+  preferredTimeTo: string;
+  status: DonationRequestStatus;
+  itemsCount: number;
+  createdAt: string;
+  offer: {
+    pickupId: string;
+    volunteerName: string;
+    status: PickupStatus;
+    assignedAt: string;
+    acceptedAt: string | null;
+  } | null;
+};
+
 export type NewCenter = {
   name: string;
   description: string | null;

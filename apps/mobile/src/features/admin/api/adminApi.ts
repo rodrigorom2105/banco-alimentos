@@ -5,6 +5,7 @@ import type {
   NewCenter,
   SupportRequestForReview,
   SupportStatus,
+  UnassignedDonation,
   VolunteerForReview,
   VolunteerStatus,
 } from '../types';
@@ -63,6 +64,20 @@ export const adminApi = {
 
   deliverSupportRequest(id: string) {
     return apiRequest<{ status: SupportStatus }>('POST', `/admin/support-requests/${id}/deliver`);
+  },
+
+  // Donaciones que nadie tomó o cuya propuesta venció sin respuesta.
+  listUnassignedDonations() {
+    return apiRequest<UnassignedDonation[]>('GET', '/admin/donation-requests?unassigned=true');
+  },
+
+  // Vuelve a buscar voluntario. Si había una propuesta vencida, el backend la cancela y no se
+  // la vuelve a ofrecer a quien la dejó pasar.
+  assignDonation(id: string) {
+    return apiRequest<{ assigned: boolean; volunteerName?: string }>(
+      'POST',
+      `/admin/donation-requests/${id}/assign`,
+    );
   },
 
   createCenter(center: NewCenter) {

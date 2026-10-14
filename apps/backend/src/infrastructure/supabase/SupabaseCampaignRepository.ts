@@ -57,6 +57,21 @@ export class SupabaseCampaignRepository implements CampaignRepository {
     return data.map(toCampaign);
   }
 
+  async listActiveDestinations(municipalityId: number) {
+    const { data, error } = await this.db
+      .from('campaigns')
+      .select('id, name, latitude, longitude')
+      .eq('status', 'active')
+      .eq('municipality_id', municipalityId)
+      .returns<{ id: string; name: string; latitude: number; longitude: number }[]>();
+    if (error) throw error;
+    return data.map((row) => ({
+      id: row.id,
+      name: row.name,
+      coordinates: { latitude: row.latitude, longitude: row.longitude },
+    }));
+  }
+
   async saveReview(id: string, review: CampaignReview) {
     const { error } = await this.db
       .from('campaigns')

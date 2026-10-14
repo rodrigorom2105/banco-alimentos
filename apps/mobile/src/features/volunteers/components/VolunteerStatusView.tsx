@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { MyPickupList } from '@/features/pickups';
 import { Button } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
 import { colors, radius, spacing } from '@/shared/theme';
@@ -91,12 +92,17 @@ export function VolunteerStatusView({ application, onResubmit }: Props) {
       )}
 
       {application.validation_status === 'approved' && (
-        <Card icon="check-circle-outline" tone="success" title="¡Eres voluntario de BAMX!">
-          <Text style={styles.text}>
-            Tus recolecciones asignadas y tu ruta del día van a aparecer aquí. Te avisamos con una
-            notificación en cuanto tengas la primera.
-          </Text>
-        </Card>
+        <>
+          <Card icon="check-circle-outline" tone="success" title="¡Eres voluntario de BAMX!">
+            <Text style={styles.text}>
+              Cuando alguien de tu zona done desde casa, te vamos a proponer la recolección y
+              recibirás una notificación. Tú decides si la aceptas.
+            </Text>
+          </Card>
+          {/* La ruta del día y los pasos de la recolección (en camino, recolectado, entregado)
+              llegan en la Fase 9. */}
+          <MyPickupList />
+        </>
       )}
 
       <View style={styles.summary}>

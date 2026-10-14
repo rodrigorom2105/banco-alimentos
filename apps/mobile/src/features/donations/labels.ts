@@ -17,6 +17,7 @@ export const DONATION_STATUS: Record<
     tone: 'success',
     hint: 'Ten tu donativo empacado y listo para la fecha y el horario que indicaste.',
   },
+  // Nunca se muestra tal cual: `donationStatus` la reemplaza según si el voluntario confirmó.
   completed: {
     label: 'Entregada',
     tone: 'success',
@@ -24,6 +25,27 @@ export const DONATION_STATUS: Record<
   },
   cancelled: { label: 'Cancelada', tone: 'neutral', hint: '' },
 };
+
+/**
+ * Qué se le dice al donador sobre su solicitud.
+ *
+ * `assigned` en la base significa que ya existe una recolección, pero esa recolección puede ser
+ * una propuesta que el voluntario todavía no confirmó. Decirle "ya tienes voluntario" en ese
+ * momento sería prometer algo que puede no pasar: si rechaza, la solicitud vuelve a buscar.
+ */
+export function donationStatus(
+  status: Enums<'donation_request_status'>,
+  isConfirmed: boolean,
+): { label: string; tone: BadgeTone; hint: string } {
+  if (status !== 'assigned') return DONATION_STATUS[status];
+  return isConfirmed
+    ? DONATION_STATUS.assigned
+    : {
+        label: 'Esperando confirmación',
+        tone: 'warning',
+        hint: 'Ya le propusimos tu donativo a un voluntario de tu zona. Te avisamos en cuanto lo confirme.',
+      };
+}
 
 // Una solicitud sigue "abierta" mientras algo pueda pasar con ella.
 export const isOpen = (status: Enums<'donation_request_status'>) =>

@@ -4,6 +4,8 @@ import type { Container } from '../../container';
 import { authenticate } from './middlewares/authenticate';
 import { errorHandler } from './middlewares/errorHandler';
 import { campaignsRoutes } from './routes/campaigns.routes';
+import { donationsRoutes } from './routes/donations.routes';
+import { pickupsRoutes } from './routes/pickups.routes';
 import { supportRoutes } from './routes/support.routes';
 import { usersRoutes } from './routes/users.routes';
 import { volunteersRoutes } from './routes/volunteers.routes';
@@ -47,6 +49,8 @@ export function createApp(container: Container) {
   app.use(volunteersRoutes(container));
   app.use(supportRoutes(container));
   app.use(usersRoutes(container));
+  app.use(donationsRoutes(container));
+  app.use(pickupsRoutes(container));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'NOT_FOUND', message: 'Ruta no encontrada.' });

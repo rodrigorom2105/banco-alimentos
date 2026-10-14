@@ -25,3 +25,19 @@ export function useMyDonation(id: string) {
 
   return { donation: data, isLoading, error, reload };
 }
+
+/**
+ * Quién va a recoger la donación.
+ *
+ * `enabled` evita la consulta cuando la solicitud todavía no tiene recolección: ahí la función
+ * devolvería 0 filas y sería una llamada de más en cada apertura de la pantalla.
+ */
+export function useRequestVolunteer(id: string, enabled: boolean) {
+  const fetcher = useCallback(
+    () => (enabled ? donationsApi.getVolunteer(id) : Promise.resolve(null)),
+    [id, enabled],
+  );
+  const { data } = useFocusQuery(fetcher);
+
+  return { volunteer: data };
+}

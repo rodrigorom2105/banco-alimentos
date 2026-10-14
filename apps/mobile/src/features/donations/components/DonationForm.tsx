@@ -58,6 +58,9 @@ export function DonationForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  // Si la plataforma encontró voluntario de inmediato, para que el mensaje final no prometa
+  // algo distinto a lo que pasó.
+  const [isAssigned, setIsAssigned] = useState(false);
 
   // El esquema exige teléfono antes de crear una solicitud; si falta se pide aquí mismo.
   const needsPhone = !isLoadingProfile && !profile?.phone;
@@ -105,7 +108,7 @@ export function DonationForm() {
     setIsSubmitting(true);
     try {
       if (needsPhone) await profileApi.updatePhone(user.id, phone.trim());
-      await donationsApi.createRequest(
+      const requestId = await donationsApi.createRequest(
         user.id,
         {
           address: location.address.trim(),
@@ -127,6 +130,20 @@ export function DonationForm() {
           unit: i.unit,
         })),
       );
+
+      /**
+       * Buscar voluntario es un paso aparte, y si falla la solicitud NO se pierde.
+       *
+       * Decirle "no se pudo enviar" sería mentira: ya quedó guardada, y volvería a mandarla
+       * duplicada. Queda `pending` y el admin la ve en "Donaciones sin voluntario", así que
+       * aquí se ignora el error a propósito.
+       */
+      try {
+        const result = await donationsApi.requestAssignment(requestId);
+        setIsAssigned(result.assigned);
+      } catch {
+        setIsAssigned(false);
+      }
       setIsDone(true);
     } catch (e) {
       setErrors({ submit: getErrorMessage(e, 'No se pudo enviar la solicitud.') });
@@ -139,7 +156,11 @@ export function DonationForm() {
     return (
       <SuccessState
         title="¡Solicitud enviada!"
-        message="Te avisaremos cuando un voluntario de tu zona acepte la recolección. Ten tu donativo empacado y listo."
+        message={
+          isAssigned
+            ? 'Ya le propusimos tu donativo a un voluntario de tu zona. Te avisamos en cuanto lo confirme; ten tu donativo empacado y listo.'
+            : 'Estamos buscando un voluntario de tu zona que pueda pasar por tu donativo. Te avisamos en cuanto tengamos respuesta.'
+        }
         actionLabel="Ver mis donaciones"
         onAction={() => router.replace('/donation')}
       />

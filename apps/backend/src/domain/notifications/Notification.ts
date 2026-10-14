@@ -103,6 +103,66 @@ export function volunteerSuspended(reason: string): NewNotification {
   };
 }
 
+// Recolecciones a domicilio (Fase 8). Los tres avisos usan el mismo tipo del enum,
+// `pickup_assigned`, porque para la app significan lo mismo: "algo pasó con esta recolección".
+// Lo que cambia es `data`, y con eso la app sabe a dónde llevar a cada persona: al voluntario a
+// su panel (`pickupId`) y al donador a su donación (`requestId`).
+
+// 'YYYY-MM-DD' → 'DD/MM'. El año sobra: una recolección siempre es de los próximos días.
+const dayMonth = (date: string) => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+
+/**
+ * Para el voluntario: la plataforma lo eligió y le propone una recolección.
+ *
+ * Dice el plazo porque la propuesta vence: si no contesta, la donación se le ofrece a otra
+ * persona, y es más justo que lo sepa desde el aviso que enterarse cuando ya la perdió.
+ */
+export function pickupOffered(
+  pickup: { id: string },
+  request: { preferredDate: string; preferredTimeFrom: string; preferredTimeTo: string },
+  offerHours: number,
+): NewNotification {
+  const from = request.preferredTimeFrom.slice(0, 5);
+  const to = request.preferredTimeTo.slice(0, 5);
+  return {
+    type: 'pickup_assigned',
+    title: 'Tienes una recolección por confirmar',
+    body: `Es el ${dayMonth(request.preferredDate)} entre ${from} y ${to}. Confírmala en las próximas ${offerHours} horas; si no, se le ofrece a otro voluntario.`,
+    data: { pickupId: pickup.id },
+  };
+}
+
+// Para el donador: hasta aquí su solicitud decía "buscando voluntario". Es el primer momento en
+// que alguien se comprometió de verdad, y por eso es el primer aviso que recibe.
+export function pickupAccepted(request: { id: string }, volunteerName: string): NewNotification {
+  return {
+    type: 'pickup_assigned',
+    title: 'Ya tienes voluntario',
+    body: `${volunteerName} va a pasar por tu donativo en la fecha y el horario que indicaste. Tenlo empacado y listo.`,
+    data: { requestId: request.id },
+  };
+}
+
+/**
+ * Para los admins: no se encontró a ningún voluntario que pudiera tomar la donación.
+ *
+ * `data` lleva `donationRequestId` y NO `requestId` a propósito: con `requestId` la app mandaría
+ * al admin a la pantalla "Mis donaciones" del donador, que RLS no le deja ver. Con esta llave
+ * cae en el panel, que es donde puede hacer algo al respecto.
+ */
+export function donationUnassigned(request: {
+  id: string;
+  municipalityName: string;
+  preferredDate: string;
+}): NewNotification {
+  return {
+    type: 'donation_unassigned',
+    title: 'Una donación se quedó sin voluntario',
+    body: `${request.municipalityName}, para el ${dayMonth(request.preferredDate)}. Ningún voluntario disponible cubre esa zona, día y horario.`,
+    data: { donationRequestId: request.id },
+  };
+}
+
 // Solicitudes de apoyo de una campaña comunitaria (contenedores, difusión, material).
 export function supportResponded(
   support: { id: string; campaignId: string },
