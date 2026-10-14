@@ -15,6 +15,14 @@ import {
   DeclinePickup,
   ListMyPickups,
 } from './application/pickups/respondToPickupOffer';
+import {
+  CancelPickup,
+  CollectPickup,
+  DeliverPickup,
+  GetMyPickupSummary,
+  GetMyRoute,
+  StartPickup,
+} from './application/pickups/runPickup';
 import type { AuthService, Clock } from './application/ports';
 import {
   DeliverSupportRequest,
@@ -143,6 +151,33 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       ),
       // Rechazar reasigna: por eso recibe el caso de uso de asignación, no un repositorio.
       declinePickup: new DeclinePickup(adapters.pickups, adapters.volunteers, autoAssignPickup),
+      getMyRoute: new GetMyRoute(adapters.pickups, adapters.volunteers),
+      getMyPickupSummary: new GetMyPickupSummary(
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.clock,
+      ),
+      startPickup: new StartPickup(
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.donationRequests,
+        adapters.notifier,
+      ),
+      collectPickup: new CollectPickup(adapters.pickups, adapters.volunteers),
+      deliverPickup: new DeliverPickup(
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.donationRequests,
+        adapters.notifier,
+      ),
+      // Cancelar una ya confirmada también reasigna, igual que rechazar una propuesta.
+      cancelPickup: new CancelPickup(
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.donationRequests,
+        adapters.notifier,
+        autoAssignPickup,
+      ),
       // Editar también puede reasignar, si cambia el día, el horario o dónde se recoge.
       updateDonationRequest: new UpdateDonationRequest(
         adapters.donationRequests,

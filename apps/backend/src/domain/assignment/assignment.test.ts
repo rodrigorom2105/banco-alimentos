@@ -14,7 +14,14 @@ import {
   type VolunteerCandidate,
 } from './assignment';
 import { haversineKm } from './geo';
-import { estimatedRouteKm, orderByNearest, STREET_FACTOR, type Stop } from './route';
+import {
+  buildGoogleMapsUrl,
+  estimatedRouteKm,
+  orderByNearest,
+  orderDay,
+  STREET_FACTOR,
+  type Stop,
+} from './route';
 
 // Punto de acopio ~3 km al norte del domicilio del donador.
 const CENTER: DestinationCampaign = {
@@ -128,6 +135,50 @@ describe('orderByNearest', () => {
     const middle = stop('middle', 20.75, -103.344);
     const ordered = orderByNearest([far, middle, near], DOWNTOWN);
     expect(ordered.map((s) => s.id)).toEqual(['near', 'middle', 'far']);
+  });
+});
+
+describe('orderDay', () => {
+  const temprano = stop('temprano', 20.9, -103.344, '08:00:00');
+  const tarde = stop('tarde', 20.68, -103.344, '16:00:00');
+
+  // Sin ubicación del voluntario, el horario del donador es la única referencia que hay: los
+  // voluntarios no tienen coordenadas de su casa registradas.
+  it('sin punto de partida empieza por la parada más temprana', () => {
+    expect(orderDay([tarde, temprano], null).map((s) => s.id)).toEqual(['temprano', 'tarde']);
+  });
+
+  it('con punto de partida empieza por la más cercana, sin importar el horario', () => {
+    const from = { latitude: 20.68, longitude: -103.344 };
+    expect(orderDay([temprano, tarde], from).map((s) => s.id)).toEqual(['tarde', 'temprano']);
+  });
+
+  it('con el día vacío no devuelve nada', () => {
+    expect(orderDay([], null)).toEqual([]);
+  });
+});
+
+describe('buildGoogleMapsUrl', () => {
+  const a = { latitude: 20.67, longitude: -103.34 };
+  const b = { latitude: 20.68, longitude: -103.35 };
+  const centro = { latitude: 20.7, longitude: -103.344 };
+
+  // Las comas y la barra vertical tienen que ir literales: escapadas, Maps no las entiende.
+  it('arma la URL con las paradas intermedias separadas por |', () => {
+    const url = buildGoogleMapsUrl(a, [a, b], centro);
+    expect(url).toContain('origin=20.67,-103.34');
+    expect(url).toContain('destination=20.7,-103.344');
+    expect(url).toContain('waypoints=20.67,-103.34|20.68,-103.35');
+    expect(url).toContain('travelmode=driving');
+  });
+
+  // Sin origen, Maps arranca donde esté el celular: justo lo que se quiere si no dio permiso.
+  it('omite el origen si no hay ubicación', () => {
+    expect(buildGoogleMapsUrl(null, [a], centro)).not.toContain('origin=');
+  });
+
+  it('funciona sin paradas intermedias', () => {
+    expect(buildGoogleMapsUrl(a, [], centro)).not.toContain('waypoints=');
   });
 });
 

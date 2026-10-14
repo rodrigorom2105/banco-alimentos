@@ -402,6 +402,52 @@ describe('API HTTP', () => {
     expect((await call('/volunteer/pickups', { token: 'token-donor' })).status).toBe(404);
   });
 
+  // --- Flujo de la recolección (Fase 9) ---
+
+  it('no deja iniciar una recolección que no se confirmó (409)', async () => {
+    const { call } = await start();
+    const res = await call(`/pickups/${PICKUP_ID}/start`, {
+      method: 'POST',
+      token: 'token-volunteer-user',
+    });
+    expect(res.status).toBe(409);
+  });
+
+  it('valida las cantidades al recolectar y la foto al entregar (400)', async () => {
+    const { call } = await start();
+    const negative = await call(`/pickups/${PICKUP_ID}/collect`, {
+      method: 'POST',
+      token: 'token-volunteer-user',
+      body: JSON.stringify({ items: [{ itemId: REQUEST_ID, collectedQuantity: -1 }] }),
+    });
+    expect(negative.status).toBe(400);
+
+    const noPhoto = await call(`/pickups/${PICKUP_ID}/deliver`, {
+      method: 'POST',
+      token: 'token-volunteer-user',
+      body: JSON.stringify({ evidencePhotoPath: '  ' }),
+    });
+    expect(noPhoto.status).toBe(400);
+  });
+
+  it('el voluntario pide su ruta del día y su resumen', async () => {
+    const { call } = await start();
+    const route = await call('/volunteer/route?date=2026-10-28', {
+      token: 'token-volunteer-user',
+    });
+    expect(route.status).toBe(200);
+    expect(await route.json()).toMatchObject({ stops: [] });
+
+    const summary = await call('/volunteer/summary', { token: 'token-volunteer-user' });
+    expect(summary.status).toBe(200);
+  });
+
+  it('la ruta sin fecha válida responde 400', async () => {
+    const { call } = await start();
+    const res = await call('/volunteer/route?date=mañana', { token: 'token-volunteer-user' });
+    expect(res.status).toBe(400);
+  });
+
   it('una acción inválida para el estado responde 409', async () => {
     const { call } = await start();
     const res = await call(`/campaigns/${CAMPAIGN_ID}/finish`, {

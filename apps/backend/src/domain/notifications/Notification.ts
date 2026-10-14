@@ -144,6 +144,50 @@ export function pickupAccepted(request: { id: string }, volunteerName: string): 
 }
 
 /**
+ * Los tres avisos del flujo que recibe el DONADOR.
+ *
+ * Todos llevan `requestId` en `data`, y no es un adorno: así `hrefFor` los manda a su donación.
+ * Sin esa llave caerían en el panel de voluntario, donde el donador no tiene nada que hacer
+ * (era un bug real, corregido en la Fase 7).
+ */
+
+// Su voluntario salió hacia el domicilio. El aviso más útil del flujo, y por eso lleva el
+// nombre: va a tocar su puerta en un rato.
+export function pickupOnTheWay(requestId: string, volunteerName: string): NewNotification {
+  return {
+    type: 'pickup_on_the_way',
+    title: `${volunteerName} va en camino`,
+    body: 'Ten tu donativo a la mano. Va a pasar por él en un rato.',
+    data: { requestId },
+  };
+}
+
+// El donativo llegó al punto de acopio y su solicitud quedó completada.
+export function pickupDelivered(requestId: string): NewNotification {
+  return {
+    type: 'pickup_delivered',
+    title: '¡Tu donativo ya llegó!',
+    body: 'Tu voluntario lo entregó en el punto de acopio. Gracias por apoyar a BAMX.',
+    data: { requestId },
+  };
+}
+
+/**
+ * El voluntario que ya había confirmado no va a poder.
+ *
+ * No se le dice el motivo ni quién canceló: es un asunto entre el voluntario y BAMX, y al
+ * donador solo le sirve saber qué pasa con su donativo.
+ */
+export function pickupCancelledByVolunteer(requestId: string): NewNotification {
+  return {
+    type: 'pickup_cancelled',
+    title: 'Tu recolección se canceló',
+    body: 'El voluntario que la tenía no va a poder. Ya estamos buscando a alguien más y te avisamos en cuanto lo tengamos.',
+    data: { requestId },
+  };
+}
+
+/**
  * Para el voluntario: el donador cambió la fecha o el horario, así que la propuesta que tenía
  * pendiente ya no aplica.
  *

@@ -21,6 +21,7 @@ const SIGNED_IN_SCREENS = [
   'volunteer/apply',
   'volunteer/dashboard',
   'volunteer/availability',
+  'volunteer/pickups/[id]',
   // Panel de administrador. Además de estar protegidas por sesión, cada pantalla esconde su
   // contenido a quien no es admin (AdminOnly) y el backend responde 403 a sus endpoints.
   'admin/index',

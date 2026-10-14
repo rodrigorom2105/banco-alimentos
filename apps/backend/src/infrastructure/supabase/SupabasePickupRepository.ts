@@ -1,7 +1,7 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 
 import type { Stop } from '../../domain/assignment/route';
-import type { NewPickup, Pickup, PickupStatus } from '../../domain/pickups/Pickup';
+import type { CollectedItem, NewPickup, Pickup, PickupStatus } from '../../domain/pickups/Pickup';
 import type { PickupRepository, VolunteerPickup } from '../../domain/pickups/PickupRepository';
 import { ConflictError } from '../../domain/shared/errors';
 
@@ -62,15 +62,20 @@ type StopRow = {
   campaigns: { latitude: number; longitude: number };
 };
 
+// Estados que todavía piden algo del voluntario. Las entregadas no salen del panel: ya no hay
+// nada que hacer con ellas, y el contador del mes las cuenta aparte.
+const ACTIVE_STATUSES = ['assigned', 'on_the_way', 'collected'];
+
 const PICKUP_LIST_COLUMNS = `
   id, status, assigned_at, accepted_at,
   donation_requests!inner(
-    id, address, address_references, preferred_date,
-    preferred_time_from, preferred_time_to, notes,
+    id, address, address_references, latitude, longitude,
+    preferred_date, preferred_time_from, preferred_time_to, notes,
     municipalities(name),
-    donation_items(description, quantity, unit)
+    users!donation_requests_donor_id_fkey(first_name, last_name, phone),
+    donation_items(id, description, quantity, unit, collected_quantity)
   ),
-  campaigns!inner(id, name, address)
+  campaigns!inner(id, name, address, latitude, longitude)
 `;
 
 type PickupListRow = {
@@ -82,14 +87,23 @@ type PickupListRow = {
     id: string;
     address: string;
     address_references: string | null;
+    latitude: number;
+    longitude: number;
     preferred_date: string;
     preferred_time_from: string;
     preferred_time_to: string;
     notes: string | null;
     municipalities: { name: string } | null;
-    donation_items: { description: string; quantity: number; unit: string }[];
+    users: { first_name: string; last_name: string; phone: string | null } | null;
+    donation_items: {
+      id: string;
+      description: string;
+      quantity: number;
+      unit: string;
+      collected_quantity: number | null;
+    }[];
   };
-  campaigns: { id: string; name: string; address: string };
+  campaigns: { id: string; name: string; address: string; latitude: number; longitude: number };
 };
 
 export class SupabasePickupRepository implements PickupRepository {
@@ -132,29 +146,62 @@ export class SupabasePickupRepository implements PickupRepository {
       .from('pickups')
       .select(PICKUP_LIST_COLUMNS)
       .eq('volunteer_id', volunteerId)
-      .neq('status', 'cancelled')
+      .in('status', ACTIVE_STATUSES)
       .order('preferred_date', { referencedTable: 'donation_requests', ascending: true })
       .returns<PickupListRow[]>();
     if (error) throw error;
 
-    return data.map((row) => ({
-      id: row.id,
-      status: row.status,
-      assignedAt: row.assigned_at,
-      acceptedAt: row.accepted_at,
-      request: {
-        id: row.donation_requests.id,
-        address: row.donation_requests.address,
-        addressReferences: row.donation_requests.address_references,
-        municipalityName: row.donation_requests.municipalities?.name ?? '',
-        preferredDate: row.donation_requests.preferred_date,
-        preferredTimeFrom: row.donation_requests.preferred_time_from,
-        preferredTimeTo: row.donation_requests.preferred_time_to,
-        notes: row.donation_requests.notes,
-        items: row.donation_requests.donation_items,
-      },
-      destination: row.campaigns,
-    }));
+    return data.map((row) => {
+      const request = row.donation_requests;
+      const donor = request.users;
+      return {
+        id: row.id,
+        status: row.status,
+        assignedAt: row.assigned_at,
+        acceptedAt: row.accepted_at,
+        request: {
+          id: request.id,
+          donorName: donor ? `${donor.first_name} ${donor.last_name}`.trim() : '',
+          // El esquema solo deja al voluntario ver el teléfono mientras la recolección esté en
+          // curso, y esta consulta solo devuelve esas.
+          donorPhone: donor?.phone ?? null,
+          address: request.address,
+          addressReferences: request.address_references,
+          municipalityName: request.municipalities?.name ?? '',
+          coordinates: { latitude: request.latitude, longitude: request.longitude },
+          preferredDate: request.preferred_date,
+          preferredTimeFrom: request.preferred_time_from,
+          preferredTimeTo: request.preferred_time_to,
+          notes: request.notes,
+          items: request.donation_items.map((item) => ({
+            id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            unit: item.unit,
+            collectedQuantity: item.collected_quantity,
+          })),
+        },
+        destination: {
+          id: row.campaigns.id,
+          name: row.campaigns.name,
+          address: row.campaigns.address,
+          coordinates: { latitude: row.campaigns.latitude, longitude: row.campaigns.longitude },
+        },
+      };
+    });
+  }
+
+  async countDeliveredInMonth(volunteerId: string, month: string) {
+    const { from, before } = monthRange(month);
+    const { count, error } = await this.db
+      .from('pickups')
+      .select('id, donation_requests!inner(preferred_date)', { count: 'exact', head: true })
+      .eq('volunteer_id', volunteerId)
+      .eq('status', 'delivered')
+      .gte('donation_requests.preferred_date', from)
+      .lt('donation_requests.preferred_date', before);
+    if (error) throw error;
+    return count ?? 0;
   }
 
   async listStopsByVolunteer(volunteerIds: string[], date: string) {
@@ -248,6 +295,45 @@ export class SupabasePickupRepository implements PickupRepository {
     const { error } = await this.db
       .from('pickups')
       .update({ status: 'cancelled', cancellation_reason: reason })
+      .eq('id', id);
+    if (error) throw error;
+  }
+
+  // Los timestamps de cada paso (`on_the_way_at`, `collected_at`, `delivered_at`) los pone el
+  // trigger junto con el estado, así que aquí solo se manda el estado.
+  async saveStart(id: string) {
+    const { error } = await this.db.from('pickups').update({ status: 'on_the_way' }).eq('id', id);
+    if (error) throw error;
+  }
+
+  /**
+   * Guarda las cantidades reales y marca la recolección como recogida.
+   *
+   * Las cantidades van PRIMERO y el estado después, a propósito: el trigger
+   * `donation_items_before_write` solo deja al voluntario escribir `collected_quantity` mientras
+   * su recolección esté `on_the_way` o `collected`, así que el orden funciona en los dos casos,
+   * pero si el estado cambiara primero y las cantidades fallaran, quedaría una recolección
+   * "recogida" sin registro de qué se recogió.
+   */
+  async saveCollection(id: string, items: CollectedItem[]) {
+    for (const item of items) {
+      const { error } = await this.db
+        .from('donation_items')
+        .update({ collected_quantity: item.collectedQuantity })
+        .eq('id', item.itemId);
+      if (error) throw error;
+    }
+
+    const { error } = await this.db.from('pickups').update({ status: 'collected' }).eq('id', id);
+    if (error) throw error;
+  }
+
+  // La foto y el estado van en el MISMO update: el trigger exige que la ruta esté presente para
+  // dejar pasar a `delivered`, así que en dos pasos el primero fallaría.
+  async saveDelivery(id: string, evidencePhotoPath: string) {
+    const { error } = await this.db
+      .from('pickups')
+      .update({ status: 'delivered', evidence_photo_path: evidencePhotoPath })
       .eq('id', id);
     if (error) throw error;
   }
