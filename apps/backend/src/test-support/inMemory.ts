@@ -16,7 +16,7 @@ import type {
 import type { DonationRequestRepository } from '../domain/donations/DonationRequestRepository';
 import type { NewNotification } from '../domain/notifications/Notification';
 import type { Notifier } from '../domain/notifications/Notifier';
-import type { NewPickup, Pickup } from '../domain/pickups/Pickup';
+import type { CollectedItem, NewPickup, Pickup } from '../domain/pickups/Pickup';
 import type { PickupRepository, VolunteerPickup } from '../domain/pickups/PickupRepository';
 import { ConflictError } from '../domain/shared/errors';
 import type {
@@ -220,12 +220,19 @@ export class InMemoryDonationRequestRepository implements DonationRequestReposit
  * Recolección con los datos que la base resolvería con joins: la parada (coordenadas del
  * domicilio y del punto de acopio) y la fecha de la solicitud.
  */
-export type FakePickup = Pickup & { stop: Stop; preferredDate: string };
+export type FakePickup = Pickup & {
+  stop: Stop;
+  preferredDate: string;
+  // Los productos de la solicitud, para probar el registro de cantidades al recolectar.
+  items?: VolunteerPickup['request']['items'];
+};
 
 export class InMemoryPickupRepository implements PickupRepository {
   readonly created: NewPickup[] = [];
   readonly cancellations: { id: string; reason: string }[] = [];
   readonly accepted: string[] = [];
+  readonly collections: { id: string; items: CollectedItem[] }[] = [];
+  readonly deliveries: { id: string; evidencePhotoPath: string }[] = [];
 
   constructor(private readonly pickups: FakePickup[] = []) {}
 
@@ -247,9 +254,14 @@ export class InMemoryPickupRepository implements PickupRepository {
     ];
   }
 
+  // Las entregadas no salen, igual que en el adaptador real: ya no piden nada del voluntario.
   async listForVolunteer(volunteerId: string): Promise<VolunteerPickup[]> {
     return this.pickups
-      .filter((p) => p.volunteerId === volunteerId && p.status !== 'cancelled')
+      .filter(
+        (p) =>
+          p.volunteerId === volunteerId &&
+          (p.status === 'assigned' || p.status === 'on_the_way' || p.status === 'collected'),
+      )
       .map((p) => ({
         id: p.id,
         status: p.status,
@@ -257,17 +269,34 @@ export class InMemoryPickupRepository implements PickupRepository {
         acceptedAt: p.acceptedAt,
         request: {
           id: p.requestId,
+          donorName: 'Luis Pérez',
+          donorPhone: '3312345678',
           address: 'Calle 1',
           addressReferences: null,
           municipalityName: 'Guadalajara',
+          coordinates: p.stop.coordinates,
           preferredDate: p.preferredDate,
           preferredTimeFrom: p.stop.timeFrom,
           preferredTimeTo: '14:00:00',
           notes: null,
-          items: [],
+          items: p.items ?? [],
         },
-        destination: { id: p.destinationCampaignId, name: 'Centro BAMX', address: 'Av. 1' },
+        destination: {
+          id: p.destinationCampaignId,
+          name: 'Centro BAMX',
+          address: 'Av. 1',
+          coordinates: p.stop.destination,
+        },
       }));
+  }
+
+  async countDeliveredInMonth(volunteerId: string, month: string) {
+    return this.pickups.filter(
+      (p) =>
+        p.volunteerId === volunteerId &&
+        p.status === 'delivered' &&
+        p.preferredDate.startsWith(month),
+    ).length;
   }
 
   async listStopsByVolunteer(volunteerIds: string[], date: string) {
@@ -327,6 +356,29 @@ export class InMemoryPickupRepository implements PickupRepository {
     this.cancellations.push({ id, reason });
     const pickup = this.pickups.find((p) => p.id === id);
     if (pickup) pickup.status = 'cancelled';
+  }
+
+  async saveStart(id: string) {
+    const pickup = this.pickups.find((p) => p.id === id);
+    if (pickup) pickup.status = 'on_the_way';
+  }
+
+  async saveCollection(id: string, items: CollectedItem[]) {
+    this.collections.push({ id, items });
+    const pickup = this.pickups.find((p) => p.id === id);
+    if (pickup) {
+      pickup.status = 'collected';
+      for (const item of items) {
+        const found = pickup.items?.find((i) => i.id === item.itemId);
+        if (found) found.collectedQuantity = item.collectedQuantity;
+      }
+    }
+  }
+
+  async saveDelivery(id: string, evidencePhotoPath: string) {
+    this.deliveries.push({ id, evidencePhotoPath });
+    const pickup = this.pickups.find((p) => p.id === id);
+    if (pickup) pickup.status = 'delivered';
   }
 }
 

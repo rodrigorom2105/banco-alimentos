@@ -1,23 +1,25 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button, PromptModal, StatusBadge } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, radius, spacing } from '@/shared/theme';
-import { formatDayMonth } from '@/shared/utils';
+import { formatDayMonth, todayISO } from '@/shared/utils';
 
 import { pickupsApi } from '../api/pickupsApi';
-import { useMyPickups } from '../hooks/useMyPickups';
-import { ITEM_UNIT_LABELS, pickupStatus } from '../labels';
+import { useMyPickups, usePickupSummary } from '../hooks/useMyPickups';
+import { pickupStatus } from '../labels';
+import { currentLocation } from '../pickers';
 import { isOffer, type MyPickup } from '../types';
 
 const hour = (time: string) => time.slice(0, 5);
 
-function Row({ label, value }: { label: string; value: string }) {
+function Counter({ value, label }: { value: number; label: string }) {
   return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+    <View style={styles.counter}>
+      <Text style={styles.counterValue}>{value}</Text>
+      <Text style={styles.counterLabel}>{label}</Text>
     </View>
   );
 }
@@ -34,34 +36,30 @@ function PickupCard({ pickup, busy, onAccept, onDecline }: CardProps) {
   const status = pickupStatus(pickup.status, pickup.acceptedAt !== null);
   const { request } = pickup;
 
+  // Una propuesta se contesta aquí mismo; una ya confirmada se abre para ejecutarla.
+  const open = () =>
+    router.push({ pathname: '/volunteer/pickups/[id]', params: { id: pickup.id } });
+
   return (
-    <View style={[styles.card, offer && styles.offer]}>
+    <Pressable
+      onPress={offer ? undefined : open}
+      accessibilityRole={offer ? undefined : 'button'}
+      style={({ pressed }) => [styles.card, offer && styles.offer, pressed && styles.pressed]}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.date}>{formatDayMonth(request.preferredDate)}</Text>
         <StatusBadge label={status.label} tone={status.tone} />
       </View>
 
-      <Row
-        label="Horario"
-        value={`${hour(request.preferredTimeFrom)} a ${hour(request.preferredTimeTo)}`}
-      />
-      {/* El domicilio exacto se muestra porque la base ya se lo permite al voluntario asignado;
-          sin él no podría decidir si le queda en el camino. */}
-      <Row label="Recoger en" value={`${request.address}, ${request.municipalityName}`} />
-      {request.addressReferences && <Row label="Referencias" value={request.addressReferences} />}
-      <Row
-        label="Entregar en"
-        value={`${pickup.destination.name} · ${pickup.destination.address}`}
-      />
-      {request.items.length > 0 && (
-        <Row
-          label="Productos"
-          value={request.items
-            .map((i) => `${i.description} (${i.quantity} ${ITEM_UNIT_LABELS[i.unit]})`)
-            .join(', ')}
-        />
-      )}
-      {request.notes && <Row label="Notas del donador" value={request.notes} />}
+      <Text style={styles.detail}>
+        {hour(request.preferredTimeFrom)} a {hour(request.preferredTimeTo)}
+      </Text>
+      <Text style={styles.detail} numberOfLines={1}>
+        {request.address}, {request.municipalityName}
+      </Text>
+      <Text style={styles.detail} numberOfLines={1}>
+        Entregar en {pickup.destination.name}
+      </Text>
 
       {offer ? (
         <>
@@ -78,39 +76,67 @@ function PickupCard({ pickup, busy, onAccept, onDecline }: CardProps) {
           </View>
         </>
       ) : (
-        // Avanzar la recolección (voy en camino, recolectado, entregado) y la ruta del día
-        // llegan en la Fase 9.
-        <Text style={styles.note}>
-          Ya confirmaste esta recolección. Pasa por el donativo en la fecha y el horario indicados.
-        </Text>
+        <Text style={styles.open}>Toca para ver y avanzar →</Text>
       )}
-    </View>
+    </Pressable>
   );
 }
 
 /**
- * Las recolecciones del voluntario aprobado: primero las que tiene que confirmar y después las
- * que ya aceptó.
+ * El panel del voluntario aprobado: sus contadores, la ruta del día y sus recolecciones.
+ *
+ * Primero las que tiene que confirmar, porque son las que vencen; después las que ya aceptó.
  */
 export function MyPickupList() {
   const { pickups, isLoading, error, reload } = useMyPickups(true);
+  const { summary, reload: reloadSummary } = usePickupSummary(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [declining, setDeclining] = useState<MyPickup | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isOpeningRoute, setIsOpeningRoute] = useState(false);
 
   const offers = pickups.filter(isOffer);
   const confirmed = pickups.filter((p) => !isOffer(p));
+  const today = todayISO();
+  const hasRouteToday = confirmed.some((p) => p.request.preferredDate === today);
+
+  const refresh = async () => {
+    await Promise.all([reload(), reloadSummary()]);
+  };
 
   const accept = async (pickup: MyPickup) => {
     setBusyId(pickup.id);
     setActionError(null);
     try {
       await pickupsApi.accept(pickup.id);
-      await reload();
+      await refresh();
     } catch (e) {
       setActionError(getErrorMessage(e, 'No se pudo confirmar la recolección.'));
     } finally {
       setBusyId(null);
+    }
+  };
+
+  /**
+   * Abre la ruta del día en Google Maps.
+   *
+   * La ubicación es opcional: si no da permiso, el backend ordena las paradas desde la primera
+   * por horario y Maps arranca donde esté el celular.
+   */
+  const openRoute = async () => {
+    setIsOpeningRoute(true);
+    setActionError(null);
+    try {
+      const { mapsUrl } = await pickupsApi.route(today, await currentLocation());
+      if (!mapsUrl) {
+        setActionError('No tienes recolecciones confirmadas para hoy.');
+        return;
+      }
+      await Linking.openURL(mapsUrl);
+    } catch (e) {
+      setActionError(getErrorMessage(e, 'No se pudo abrir la ruta.'));
+    } finally {
+      setIsOpeningRoute(false);
     }
   };
 
@@ -119,6 +145,15 @@ export function MyPickupList() {
   return (
     <>
       <View style={styles.container}>
+        <View style={styles.counters}>
+          <Counter value={summary.active} label="Asignadas" />
+          <Counter value={summary.deliveredThisMonth} label="Entregadas este mes" />
+        </View>
+
+        {hasRouteToday && (
+          <Button title="Ver ruta de hoy" onPress={openRoute} loading={isOpeningRoute} />
+        )}
+
         {actionError && <Text style={styles.error}>{actionError}</Text>}
         {error && <Text style={styles.error}>{error}</Text>}
 
@@ -160,7 +195,7 @@ export function MyPickupList() {
         submitLabel="Rechazar"
         onSubmit={async (reason) => {
           await pickupsApi.decline(declining!.id, reason);
-          await reload();
+          await refresh();
         }}
         onClose={() => setDeclining(null)}
       />
@@ -171,6 +206,19 @@ export function MyPickupList() {
 const styles = StyleSheet.create({
   loading: { paddingVertical: spacing.lg },
   container: { gap: spacing.sm },
+  counters: { flexDirection: 'row', gap: spacing.sm },
+  counter: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: 2,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  counterValue: { fontSize: 24, fontWeight: 'bold', color: colors.primary },
+  counterLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginTop: spacing.xs },
   card: {
     gap: spacing.xs,
@@ -181,13 +229,12 @@ const styles = StyleSheet.create({
   },
   // La propuesta por confirmar se distingue: es lo único que pide una decisión.
   offer: { borderColor: colors.primary, backgroundColor: colors.backgroundTint },
+  pressed: { opacity: 0.7 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   date: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  field: { gap: 2 },
-  label: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
-  value: { fontSize: 14, color: colors.text },
+  detail: { fontSize: 13, color: colors.textSecondary },
   deadline: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
-  note: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
+  open: { fontSize: 13, fontWeight: '600', color: colors.primary, marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   action: { flex: 1 },
   empty: { fontSize: 14, lineHeight: 20, color: colors.textSecondary },

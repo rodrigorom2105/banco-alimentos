@@ -71,14 +71,8 @@ export function orderByNearest(stops: Stop[], from: Coordinates): Stop[] {
 export function estimatedRouteKm(stops: Stop[]): number {
   if (stops.length === 0) return 0;
 
-  const start = firstStop(stops);
-  const ordered = [
-    start,
-    ...orderByNearest(
-      stops.filter((s) => s.id !== start.id),
-      start.coordinates,
-    ),
-  ];
+  // Sin punto de partida: se estima el mismo recorrido que vería el voluntario en su ruta.
+  const ordered = orderDay(stops, null);
 
   let km = 0;
   for (let i = 1; i < ordered.length; i += 1) {
@@ -88,4 +82,55 @@ export function estimatedRouteKm(stops: Stop[]): number {
   km += haversineKm(last.coordinates, last.destination);
 
   return km * STREET_FACTOR;
+}
+
+/**
+ * El recorrido del día, en orden: primero los domicilios y al final el punto de acopio.
+ *
+ * `from` es desde dónde arranca (la ubicación del voluntario, si dio permiso). Si no hay, se
+ * empieza por la parada con el horario más temprano, que es la única referencia disponible:
+ * los voluntarios no tienen coordenadas de su casa registradas.
+ */
+export function orderDay(stops: Stop[], from: Coordinates | null): Stop[] {
+  if (stops.length === 0) return [];
+  if (from) return orderByNearest(stops, from);
+
+  const start = firstStop(stops);
+  return [
+    start,
+    ...orderByNearest(
+      stops.filter((s) => s.id !== start.id),
+      start.coordinates,
+    ),
+  ];
+}
+
+const point = ({ latitude, longitude }: Coordinates) => `${latitude},${longitude}`;
+
+/**
+ * Abre el recorrido en Google Maps.
+ *
+ * Se usa la URL pública de direcciones y no la Directions API: no cuesta, no necesita llave y
+ * la app de Maps ya sabe recalcular con el tráfico real. Lo que la plataforma aporta es el
+ * ORDEN de las paradas; navegar lo hace Maps.
+ *
+ * `waypoints` tiene un límite de paradas intermedias, pero con el tope de 5 recolecciones al
+ * día (Fase 8) no se alcanza.
+ */
+export function buildGoogleMapsUrl(
+  origin: Coordinates | null,
+  waypoints: Coordinates[],
+  destination: Coordinates,
+): string {
+  const params = new URLSearchParams({ api: '1', travelmode: 'driving' });
+
+  // Sin origen, Maps arranca donde esté el celular en ese momento, que es justo lo que se
+  // quiere cuando el voluntario no dio permiso de ubicación.
+  if (origin) params.set('origin', point(origin));
+  params.set('destination', point(destination));
+  if (waypoints.length > 0) params.set('waypoints', waypoints.map(point).join('|'));
+
+  // `URLSearchParams` escapa la barra vertical y las comas; Maps las necesita literales.
+  const query = params.toString().replace(/%7C/g, '|').replace(/%2C/g, ',');
+  return `https://www.google.com/maps/dir/?${query}`;
 }

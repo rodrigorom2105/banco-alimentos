@@ -9,13 +9,17 @@ import type { Notification } from './types';
  * `null` = el aviso solo se lee, no lleva a ninguna parte (todavía no existe su pantalla).
  */
 export function hrefFor(notification: Notification): Href | null {
-  const { campaignId, volunteerId, requestId } = notification.data ?? {};
+  const { campaignId, volunteerId, requestId, pickupId } = notification.data ?? {};
 
   // Las recolecciones generan el MISMO tipo de aviso para dos personas distintas: el donador
   // y el voluntario. Lo que los distingue es `data`: al donador se le manda `requestId` (su
   // solicitud) y al voluntario no. Sin esto, un donador que toca "Tu recolección va en camino"
   // caía en el panel de voluntario, donde no tiene nada que hacer.
   if (requestId) return { pathname: '/donation/[id]', params: { id: requestId } };
+
+  // Al voluntario, en cambio, se le manda `pickupId`: con eso cae directo en la recolección
+  // que tiene que atender, en lugar de buscarla en su lista.
+  if (pickupId) return { pathname: '/volunteer/pickups/[id]', params: { id: pickupId } };
 
   switch (notification.type) {
     // Al organizador le interesa ver su campaña y, si fue rechazada, el motivo. Y al admin,

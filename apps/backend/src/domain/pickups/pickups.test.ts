@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { ConflictError, ForbiddenError, ValidationError } from '../shared/errors';
-import { accept, decline, isOfferExpired, type Pickup } from './Pickup';
+import {
+  accept,
+  cancel,
+  collect,
+  decline,
+  deliver,
+  isOfferExpired,
+  start,
+  type Pickup,
+} from './Pickup';
 
 const makePickup = (overrides: Partial<Pickup> = {}): Pickup => ({
   id: 'pickup-1',
@@ -55,6 +64,93 @@ describe('decline', () => {
     const accepted = makePickup({ acceptedAt: '2026-10-27T11:00:00.000Z' });
     expect(() => decline(accepted, 'v1', 'Ya no puedo')).toThrow(ConflictError);
     expect(() => decline(accepted, 'v1', 'Ya no puedo')).toThrow(/cancélala/);
+  });
+});
+
+// Una recolección ya confirmada, que es el punto de partida del flujo.
+const accepted = (overrides: Partial<Pickup> = {}) =>
+  makePickup({ acceptedAt: '2026-10-27T11:00:00.000Z', ...overrides });
+
+describe('start', () => {
+  it('sale en camino desde una recolección confirmada', () => {
+    expect(() => start(accepted(), 'v1')).not.toThrow();
+  });
+
+  // La base lo valida igual; aquí el mensaje dice qué hacer.
+  it('no deja empezar una propuesta sin confirmar', () => {
+    expect(() => start(makePickup(), 'v1')).toThrow(/Primero confirma/);
+  });
+
+  it('no deja empezar fuera de orden ni la de otro', () => {
+    expect(() => start(accepted({ status: 'collected' }), 'v1')).toThrow(ConflictError);
+    expect(() => start(accepted(), 'otro')).toThrow(ForbiddenError);
+  });
+});
+
+describe('collect', () => {
+  const items = [{ itemId: 'item-1', collectedQuantity: 3 }];
+
+  it('registra las cantidades reales desde en camino', () => {
+    expect(collect(accepted({ status: 'on_the_way' }), 'v1', items)).toEqual(items);
+  });
+
+  // Menos de lo declarado es normal, y cero también: el donador pudo no tener ese producto.
+  it('acepta cero', () => {
+    const none = [{ itemId: 'item-1', collectedQuantity: 0 }];
+    expect(collect(accepted({ status: 'on_the_way' }), 'v1', none)).toEqual(none);
+  });
+
+  it('rechaza cantidades negativas y listas vacías', () => {
+    const negative = [{ itemId: 'item-1', collectedQuantity: -1 }];
+    expect(() => collect(accepted({ status: 'on_the_way' }), 'v1', negative)).toThrow(
+      ValidationError,
+    );
+    expect(() => collect(accepted({ status: 'on_the_way' }), 'v1', [])).toThrow(ValidationError);
+  });
+
+  it('no deja recolectar sin haber salido en camino', () => {
+    expect(() => collect(accepted(), 'v1', items)).toThrow(/tiene que estar en "on_the_way"/);
+  });
+});
+
+describe('deliver', () => {
+  it('entrega con foto desde recolectada', () => {
+    const path = deliver(accepted({ status: 'collected' }), 'v1', '  u1/p1.jpg  ');
+    expect(path).toBe('u1/p1.jpg');
+  });
+
+  // La decisión de BAMX: la evidencia se toma en el centro de acopio, y sin ella no hay entrega.
+  it('no deja entregar sin foto', () => {
+    expect(() => deliver(accepted({ status: 'collected' }), 'v1', '   ')).toThrow(/foto/);
+  });
+
+  it('no deja entregar sin haber recolectado', () => {
+    expect(() => deliver(accepted({ status: 'on_the_way' }), 'v1', 'u1/p1.jpg')).toThrow(
+      ConflictError,
+    );
+  });
+});
+
+describe('cancel', () => {
+  it('cancela una confirmada antes de recoger, con motivo', () => {
+    expect(cancel(accepted(), 'v1', '  Se me averió el carro  ')).toBe('Se me averió el carro');
+    expect(cancel(accepted({ status: 'on_the_way' }), 'v1', 'No llego')).toBe('No llego');
+  });
+
+  it('exige motivo', () => {
+    expect(() => cancel(accepted(), 'v1', '  ')).toThrow(ValidationError);
+  });
+
+  // Ya tiene el donativo en el carro: cancelar no lo devuelve a casa del donador.
+  it('no deja cancelar después de recoger', () => {
+    expect(() => cancel(accepted({ status: 'collected' }), 'v1', 'Ya no')).toThrow(
+      /no se puede cancelar/,
+    );
+  });
+
+  // Sin confirmar, la acción correcta es rechazar: el donador todavía no sabe nada.
+  it('manda a rechazar si todavía no la confirmó', () => {
+    expect(() => cancel(makePickup(), 'v1', 'No puedo')).toThrow(/recházala/);
   });
 });
 
