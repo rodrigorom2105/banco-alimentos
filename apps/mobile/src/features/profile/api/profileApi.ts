@@ -41,7 +41,7 @@ export const profileApi = {
    * explícitamente por `organizer_id`).
    */
   async getHelpContext(userId: string): Promise<HelpContext> {
-    const [roles, volunteer, campaigns] = await Promise.all([
+    const [roles, volunteer, campaigns, donations] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
       supabase
         .from('volunteers')
@@ -49,10 +49,13 @@ export const profileApi = {
         .eq('user_id', userId)
         .maybeSingle(),
       supabase.from('campaigns').select('name').eq('organizer_id', userId),
+      // RLS ya limita `donation_requests` a las propias.
+      supabase.from('donation_requests').select('status'),
     ]);
     if (roles.error) throw roles.error;
     if (volunteer.error) throw volunteer.error;
     if (campaigns.error) throw campaigns.error;
+    if (donations.error) throw donations.error;
 
     return {
       isAdmin: roles.data.some((r) => r.role === 'admin'),
@@ -66,6 +69,11 @@ export const profileApi = {
       myCampaigns: {
         count: campaigns.data.length,
         onlyName: campaigns.data.length === 1 ? campaigns.data[0].name : null,
+      },
+      myDonations: {
+        count: donations.data.length,
+        openCount: donations.data.filter((d) => d.status === 'pending' || d.status === 'assigned')
+          .length,
       },
     };
   },

@@ -29,10 +29,11 @@ const VOLUNTEER_DESCRIPTION: Record<string, string> = {
  * | Ser voluntario     | Quien NO tenga solicitud (o no tenga sesión)         |
  * | Mi voluntariado    | Quien tenga solicitud, en cualquier estado           |
  * | Donar desde casa   | Todos (sin sesión pide login)                        |
+ * | Mis donaciones     | Quien haya solicitado al menos una recolección       |
  */
 export function optionsFor(context: HelpContext, isSignedIn: boolean): Option[] {
   const options: Option[] = [];
-  const { volunteer, myCampaigns } = context;
+  const { volunteer, myCampaigns, myDonations } = context;
 
   // La revisión del admin es la que valida, así que cualquiera puede registrar (decisión 3).
   options.push({
@@ -86,9 +87,25 @@ export function optionsFor(context: HelpContext, isSignedIn: boolean): Option[] 
     href: '/donation/new',
   });
 
+  // Se muestra con cualquier donación, incluidas las entregadas: es su historial.
+  if (myDonations.count > 0) {
+    options.push({
+      key: 'my-donations',
+      icon: 'package-variant-closed',
+      title: 'Mis donaciones',
+      description:
+        myDonations.openCount > 0
+          ? `${myDonations.openCount} en curso`
+          : 'Consulta tus donaciones anteriores',
+      href: '/donation',
+    });
+  }
+
   // Un invitado ve las tres opciones abiertas; las que dependen de datos propios no aplican
   // porque su contexto viene vacío.
-  return isSignedIn ? options : options.filter((o) => o.key !== 'my-campaigns');
+  return isSignedIn
+    ? options
+    : options.filter((o) => o.key !== 'my-campaigns' && o.key !== 'my-donations');
 }
 
 export function HelpHub() {

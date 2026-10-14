@@ -12,6 +12,7 @@ import {
   Field,
   FormScreen,
   Input,
+  Select,
   SuccessState,
   type AddressValue,
 } from '@/shared/components';
@@ -21,7 +22,14 @@ import { colors, radius, spacing } from '@/shared/theme';
 import { parseDate, todayISO } from '@/shared/utils';
 
 import { donationsApi } from '../api/donationsApi';
+import { useCampaignsForDonation } from '../hooks/useCampaignsForDonation';
 import { DonationItemRow, type DonationItemDraft } from './DonationItemRow';
+
+// Primera opción del selector: la plataforma asigna el centro más cercano del municipio.
+// Guarda `preferred_campaign_id` en null. El texto describe el resultado ("el más cercano")
+// en lugar de quién decide: para el donador lo importante es que su donativo llega al punto
+// que menos traslado implica, no quién lo eligió.
+const NEAREST_CENTER = '';
 
 const newItem = (): DonationItemDraft => ({
   key: `${Date.now()}-${Math.random()}`,
@@ -40,6 +48,7 @@ export function DonationForm() {
 
   const [items, setItems] = useState<DonationItemDraft[]>([newItem()]);
   const [location, setLocation] = useState<AddressValue>(EMPTY_ADDRESS);
+  const [campaignId, setCampaignId] = useState(NEAREST_CENTER);
   const [references, setReferences] = useState('');
   const [date, setDate] = useState('');
   const [timeFrom, setTimeFrom] = useState('');
@@ -53,8 +62,24 @@ export function DonationForm() {
   // El esquema exige teléfono antes de crear una solicitud; si falta se pide aquí mismo.
   const needsPhone = !isLoadingProfile && !profile?.phone;
 
+  // El donativo solo puede ir a una campaña activa de SU municipio: el voluntario que lo
+  // recoja solo acepta recolecciones de sus propios municipios (decisión 9 del plan).
+  const {
+    campaigns,
+    isLoading: isLoadingCampaigns,
+    error: campaignsError,
+  } = useCampaignsForDonation(location.municipalityId);
+  const hasMunicipality = location.municipalityId !== null;
+  const hasNoCampaigns = hasMunicipality && !isLoadingCampaigns && campaigns.length === 0;
+
   const updateItem = (index: number, item: DonationItemDraft) =>
     setItems((prev) => prev.map((current, i) => (i === index ? item : current)));
+
+  // Al cambiar de municipio la campaña elegida deja de ser válida, así que se reinicia.
+  const updateLocation = (next: AddressValue) => {
+    if (next.municipalityId !== location.municipalityId) setCampaignId(NEAREST_CENTER);
+    setLocation(next);
+  };
 
   const validate = () => {
     const next: Errors = {};
@@ -92,6 +117,8 @@ export function DonationForm() {
           preferred_time_from: `${timeFrom}:00`,
           preferred_time_to: `${timeTo}:00`,
           notes: notes.trim() || null,
+          // null = que la plataforma elija el centro más cercano del municipio.
+          preferred_campaign_id: campaignId || null,
         },
         items.map((i) => ({
           category_id: i.categoryId!,
@@ -113,8 +140,8 @@ export function DonationForm() {
       <SuccessState
         title="¡Solicitud enviada!"
         message="Te avisaremos cuando un voluntario de tu zona acepte la recolección. Ten tu donativo empacado y listo."
-        actionLabel="Volver"
-        onAction={() => router.back()}
+        actionLabel="Ver mis donaciones"
+        onAction={() => router.replace('/donation')}
       />
     );
   }
@@ -148,7 +175,7 @@ export function DonationForm() {
       </Field>
 
       <Field label="Ubicación">
-        <AddressPicker value={location} onChange={setLocation} error={errors.address} />
+        <AddressPicker value={location} onChange={updateLocation} error={errors.address} />
         <Input
           variant="filled"
           value={references}
@@ -156,6 +183,38 @@ export function DonationForm() {
           placeholder="Referencias (ej. entre calles, portón azul)"
         />
       </Field>
+
+      {hasMunicipality && (
+        <Field
+          label="¿A qué campaña quieres donar?"
+          error={campaignsError ?? undefined}
+          hint={
+            hasNoCampaigns
+              ? undefined
+              : 'Solo se muestran los centros y campañas activos de tu municipio, porque el voluntario recoge dentro de su zona.'
+          }
+        >
+          {hasNoCampaigns ? (
+            <View style={styles.notice}>
+              <Text style={styles.noticeText}>
+                Por el momento no contamos con un punto de acopio activo en tu municipio para
+                recibir tu donativo. Puedes intentarlo más adelante o consultar los puntos
+                disponibles en Explorar. Agradecemos tu disposición para apoyar.
+              </Text>
+            </View>
+          ) : (
+            <Select
+              value={campaignId}
+              onChange={setCampaignId}
+              disabled={isLoadingCampaigns}
+              options={[
+                { value: NEAREST_CENTER, label: 'El centro más cercano a mi domicilio' },
+                ...campaigns.map((campaign) => ({ value: campaign.id, label: campaign.name })),
+              ]}
+            />
+          )}
+        </Field>
+      )}
 
       <Field label="¿Cuándo pueden pasar?" error={errors.date ?? errors.time}>
         <DateField
@@ -208,7 +267,9 @@ export function DonationForm() {
       </Field>
 
       {errors.submit && <Text style={styles.submitError}>{errors.submit}</Text>}
-      <Button title="Enviar" onPress={submit} loading={isSubmitting} />
+      {/* Sin centros activos en el municipio no hay destino posible, así que la base
+          rechazaría la recolección más adelante: mejor no dejar enviar. */}
+      <Button title="Enviar" onPress={submit} loading={isSubmitting} disabled={hasNoCampaigns} />
     </FormScreen>
   );
 }
@@ -228,5 +289,7 @@ const styles = StyleSheet.create({
   // minWidth 0: sin esto, en web los campos no se encogen y la fila se sale de la pantalla.
   flex: { flex: 1, minWidth: 0 },
   multiline: { minHeight: 80, textAlignVertical: 'top' },
+  notice: { padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.warningTint },
+  noticeText: { fontSize: 13, lineHeight: 19, color: colors.text },
   submitError: { color: colors.danger, textAlign: 'center' },
 });
