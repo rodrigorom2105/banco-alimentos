@@ -23,6 +23,7 @@ export default function VolunteerDashboardScreen() {
         <VolunteerStatusView
           application={application}
           onResubmit={() => router.push('/volunteer/apply')}
+          onEditAvailability={() => router.push('/volunteer/availability')}
         />
       )}
     </Screen>

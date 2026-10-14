@@ -28,27 +28,42 @@ export function useSupportRequestsForReview(status: SupportStatus | null) {
   return { requests: data ?? [], isLoading, error, reload };
 }
 
+export function useUnassignedDonations() {
+  const fetcher = useCallback(() => adminApi.listUnassignedDonations(), []);
+  const { data, isLoading, error, reload } = useFocusQuery(fetcher);
+  return { donations: data ?? [], isLoading, error, reload };
+}
+
+const NO_COUNTS = { campaigns: 0, volunteers: 0, support: 0, donations: 0 };
+
 /**
  * Contadores de pendientes para la tarjeta de Inicio y el menú del panel.
  *
- * Se piden las tres listas en paralelo: son consultas chicas y así el admin ve de un golpe
- * cuánto trabajo tiene sin entrar a cada sección.
+ * Se piden las listas en paralelo: son consultas chicas y así el admin ve de un golpe cuánto
+ * trabajo tiene sin entrar a cada sección.
+ *
+ * `allSettled` y no `all`: un contador es un extra, no el contenido de la pantalla. Con `all`,
+ * una sola consulta caída dejaba los cuatro en cero, que se lee como "no tienes nada que hacer"
+ * —justo lo contrario de la verdad—. Así cada sección muestra su número si lo pudo traer, y el
+ * error de fondo se ve al entrar a la sección, que es donde sirve.
  */
 export function usePendingCounts(isAdmin: boolean) {
   const fetcher = useCallback(async () => {
-    if (!isAdmin) return { campaigns: 0, volunteers: 0, support: 0 };
-    const [campaigns, volunteers, support] = await Promise.all([
+    if (!isAdmin) return NO_COUNTS;
+    const [campaigns, volunteers, support, donations] = await Promise.allSettled([
       adminApi.countPendingCampaigns(),
       adminApi.listVolunteers('pending'),
       adminApi.listSupportRequests('pending'),
+      adminApi.listUnassignedDonations(),
     ]);
-    return { campaigns, volunteers: volunteers.length, support: support.length };
+    return {
+      campaigns: campaigns.status === 'fulfilled' ? campaigns.value : 0,
+      volunteers: volunteers.status === 'fulfilled' ? volunteers.value.length : 0,
+      support: support.status === 'fulfilled' ? support.value.length : 0,
+      donations: donations.status === 'fulfilled' ? donations.value.length : 0,
+    };
   }, [isAdmin]);
 
   const { data, isLoading, reload } = useFocusQuery(fetcher);
-  return {
-    counts: data ?? { campaigns: 0, volunteers: 0, support: 0 },
-    isLoading,
-    reload,
-  };
+  return { counts: data ?? NO_COUNTS, isLoading, reload };
 }

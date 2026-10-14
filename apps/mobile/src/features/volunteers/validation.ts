@@ -1,4 +1,4 @@
-import type { PickedFile, VolunteerApplicationDraft } from './types';
+import type { AvailabilityDraft, PickedFile, VolunteerApplicationDraft } from './types';
 
 // 5 MB, el mismo límite que imponen los buckets en 07_storage_buckets.sql. Se valida aquí
 // también para avisar antes de gastar los datos del celular en una subida que va a fallar.
@@ -6,12 +6,31 @@ export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 export const ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'application/pdf'];
 
-export type ApplicationErrors = Partial<
-  Record<
-    'photo' | 'proofOfAddress' | 'days' | 'time' | 'municipalities' | 'legal' | 'phone',
-    string
-  >
->;
+export type AvailabilityErrors = Partial<Record<'days' | 'time' | 'municipalities', string>>;
+
+export type ApplicationErrors = AvailabilityErrors &
+  Partial<Record<'photo' | 'proofOfAddress' | 'legal' | 'phone', string>>;
+
+/**
+ * Valida solo la disponibilidad. Se usa dos veces: dentro de la solicitud completa y al
+ * corregirla después, y por eso vive aparte. Las tres reglas son las mismas que exige la
+ * función `update_my_availability` de la base; aquí se revisan antes para decir qué falta en
+ * español y por campo, en lugar de devolver un error de Postgres.
+ */
+export function validateAvailability(draft: AvailabilityDraft): AvailabilityErrors {
+  const errors: AvailabilityErrors = {};
+
+  if (draft.days.length === 0) errors.days = 'Elige al menos un día disponible.';
+
+  if (!draft.from || !draft.to) errors.time = 'Indica tu horario (desde y hasta).';
+  else if (draft.to <= draft.from) errors.time = 'La hora final debe ser posterior a la inicial.';
+
+  if (draft.municipalityIds.length === 0) {
+    errors.municipalities = 'Elige al menos un municipio donde puedas recoger.';
+  }
+
+  return errors;
+}
 
 const megabytes = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
 
@@ -35,7 +54,7 @@ export function validateApplication(
   // nuevos es opcional. Si se eligen, se validan igual.
   hasStoredFiles = false,
 ): ApplicationErrors {
-  const errors: ApplicationErrors = {};
+  const errors: ApplicationErrors = { ...validateAvailability(draft) };
 
   const photoError = fileError(draft.photo, hasStoredFiles ? null : 'Agrega una fotografía tuya.');
   if (photoError) errors.photo = photoError;
@@ -47,15 +66,6 @@ export function validateApplication(
   if (proofError) errors.proofOfAddress = proofError;
   else if (draft.proofOfAddress && !ALLOWED_PROOF_TYPES.includes(draft.proofOfAddress.mimeType)) {
     errors.proofOfAddress = 'El comprobante debe ser una imagen o un PDF.';
-  }
-
-  if (draft.days.length === 0) errors.days = 'Elige al menos un día disponible.';
-
-  if (!draft.from || !draft.to) errors.time = 'Indica tu horario (desde y hasta).';
-  else if (draft.to <= draft.from) errors.time = 'La hora final debe ser posterior a la inicial.';
-
-  if (draft.municipalityIds.length === 0) {
-    errors.municipalities = 'Elige al menos un municipio donde puedas recoger.';
   }
 
   if (!draft.acceptedPrivacy || !draft.acceptedTerms) {

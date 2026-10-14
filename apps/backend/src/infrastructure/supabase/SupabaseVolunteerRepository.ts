@@ -82,6 +82,39 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
     return data.map(toVolunteer);
   }
 
+  /**
+   * Voluntarios aprobados que cubren un municipio.
+   *
+   * El filtro por municipio va con `!inner`: en PostgREST eso convierte el join en obligatorio,
+   * así que solo salen los voluntarios que tienen una fila en `volunteer_municipalities` con
+   * ese municipio. Sin `!inner` saldrían todos y la condición no filtraría nada.
+   *
+   * Ojo: la lista de municipios que viene en el resultado queda recortada a ese municipio por
+   * el mismo filtro, así que se vuelve a consultar completa. La necesita `isCandidate`, y con
+   * la lista recortada un voluntario parecería cubrir solo uno.
+   */
+  async listApprovedByMunicipality(municipalityId: number) {
+    const { data, error } = await this.db
+      .from('volunteers')
+      .select('id, municipalities:volunteer_municipalities!inner(municipality_id)')
+      .eq('validation_status', 'approved')
+      .eq('volunteer_municipalities.municipality_id', municipalityId)
+      .returns<{ id: string }[]>();
+    if (error) throw error;
+    if (data.length === 0) return [];
+
+    const { data: full, error: fullError } = await this.db
+      .from('volunteers')
+      .select(COLUMNS)
+      .in(
+        'id',
+        data.map((row) => row.id),
+      )
+      .returns<VolunteerRow[]>();
+    if (fullError) throw fullError;
+    return full.map(toVolunteer);
+  }
+
   async saveReview(id: string, review: VolunteerReview) {
     // `reviewed_by` va explícito: el backend usa la llave secreta, así que para la base
     // auth.uid() es null y el trigger no lo podría llenar solo.

@@ -7,6 +7,8 @@ export interface AuthService {
 }
 
 // Fecha de "hoy" en Guadalajara ('YYYY-MM-DD'); se inyecta para poder probar con fechas fijas.
+// `now` es el instante exacto, para los plazos que se miden en horas y no en días.
 export interface Clock {
   today(): string;
+  now(): Date;
 }

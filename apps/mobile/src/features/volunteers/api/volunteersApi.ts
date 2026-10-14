@@ -3,7 +3,7 @@ import { File } from 'expo-file-system';
 import { apiRequest } from '@/shared/lib/api';
 import { supabase } from '@/shared/lib/supabase';
 
-import type { MyVolunteerApplication, PickedFile, Weekday } from '../types';
+import type { AvailabilityDraft, MyVolunteerApplication, PickedFile, Weekday } from '../types';
 import { extensionFor } from '../validation';
 
 const BUCKET = 'volunteer-documents';
@@ -122,5 +122,28 @@ export const volunteersApi = {
       availableTo: `${application.to}:00`,
       municipalityIds: application.municipalityIds,
     });
+  },
+
+  /**
+   * Corrige la disponibilidad y los municipios de una solicitud propia que esté `pending` o
+   * `approved`.
+   *
+   * No pasa por el backend: el trigger `volunteers_before_write` ya deja que el dueño cambie
+   * estos campos (lo que le prohíbe es tocar su `validation_status`), así que su propia sesión
+   * alcanza. Va por RPC y no por dos consultas porque cambiar los municipios son un delete y
+   * un insert: si el insert fallara por separado, un voluntario aprobado se quedaría con cero
+   * municipios y dejaría de recibir recolecciones sin ningún error visible
+   * (11_update_my_availability.sql).
+   *
+   * No cambia el estado de la solicitud: un aprobado sigue aprobado.
+   */
+  async updateAvailability(availability: AvailabilityDraft) {
+    const { error } = await supabase.rpc('update_my_availability', {
+      p_available_days: availability.days,
+      p_available_from: `${availability.from}:00`,
+      p_available_to: `${availability.to}:00`,
+      p_municipality_ids: availability.municipalityIds,
+    });
+    if (error) throw error;
   },
 };

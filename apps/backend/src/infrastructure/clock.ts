@@ -10,4 +10,5 @@ const guadalajaraDate = new Intl.DateTimeFormat('en-CA', {
 
 export const systemClock: Clock = {
   today: () => guadalajaraDate.format(new Date()),
+  now: () => new Date(),
 };

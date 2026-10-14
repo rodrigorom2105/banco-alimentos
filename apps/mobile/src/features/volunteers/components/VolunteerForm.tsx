@@ -4,29 +4,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { profileApi, useMyProfile } from '@/features/profile';
 import { useAuth } from '@/providers';
-import {
-  Button,
-  DateField,
-  Field,
-  FilterChip,
-  FormScreen,
-  Input,
-  SuccessState,
-} from '@/shared/components';
-import { useMunicipalities } from '@/shared/hooks';
+import { Button, Field, FormScreen, Input, SuccessState } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, spacing } from '@/shared/theme';
 
 import { volunteersApi } from '../api/volunteersApi';
-import { WEEKDAY_LABELS, WEEKDAYS } from '../labels';
 import { chooseProofOfAddress, choosePhoto, takePhoto } from '../pickers';
-import type {
-  MyVolunteerApplication,
-  PickedFile,
-  VolunteerApplicationDraft,
-  Weekday,
-} from '../types';
+import type { MyVolunteerApplication, PickedFile, VolunteerApplicationDraft } from '../types';
 import { hasErrors, validateApplication, type ApplicationErrors } from '../validation';
+import { AvailabilityFields } from './AvailabilityFields';
 import { Checkbox } from './Checkbox';
 import { FilePickerField } from './FilePickerField';
 
@@ -53,14 +39,10 @@ const draftFrom = (application: MyVolunteerApplication): VolunteerApplicationDra
   municipalityIds: application.municipalityIds,
 });
 
-const toggle = <T,>(list: T[], value: T) =>
-  list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
-
 // Con `application` el formulario corrige esa solicitud rechazada; sin ella, crea una nueva.
 export function VolunteerForm({ application }: { application?: MyVolunteerApplication }) {
   const { user } = useAuth();
   const { profile, email, isLoading: isLoadingProfile } = useMyProfile();
-  const { items: municipalities, error: municipalitiesError } = useMunicipalities();
 
   const isResubmission = !!application;
   const [draft, setDraft] = useState<VolunteerApplicationDraft>(
@@ -150,57 +132,7 @@ export function VolunteerForm({ application }: { application?: MyVolunteerApplic
         </Field>
       )}
 
-      <Field
-        label="Municipios donde puedes recoger"
-        error={errors.municipalities ?? municipalitiesError ?? undefined}
-      >
-        <View style={styles.chips}>
-          {municipalities.map((municipality) => (
-            <FilterChip
-              key={municipality.id}
-              label={municipality.name}
-              selected={draft.municipalityIds.includes(municipality.id)}
-              onPress={() =>
-                update({ municipalityIds: toggle(draft.municipalityIds, municipality.id) })
-              }
-            />
-          ))}
-        </View>
-      </Field>
-
-      <Field label="Días disponibles" error={errors.days}>
-        <View style={styles.chips}>
-          {WEEKDAYS.map((day: Weekday) => (
-            <FilterChip
-              key={day}
-              label={WEEKDAY_LABELS[day]}
-              selected={draft.days.includes(day)}
-              onPress={() => update({ days: toggle(draft.days, day) })}
-            />
-          ))}
-        </View>
-      </Field>
-
-      <Field label="Horario" error={errors.time} hint="El mismo para todos los días que elegiste.">
-        <View style={styles.row}>
-          <View style={styles.flex}>
-            <DateField
-              mode="time"
-              value={draft.from || null}
-              onChange={(from) => update({ from })}
-              placeholder="Desde"
-            />
-          </View>
-          <View style={styles.flex}>
-            <DateField
-              mode="time"
-              value={draft.to || null}
-              onChange={(to) => update({ to })}
-              placeholder="Hasta"
-            />
-          </View>
-        </View>
-      </Field>
+      <AvailabilityFields value={draft} onChange={update} errors={errors} />
 
       <Field
         label="Tu fotografía"
@@ -285,10 +217,6 @@ export function VolunteerForm({ application }: { application?: MyVolunteerApplic
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  row: { flexDirection: 'row', gap: spacing.sm },
-  // minWidth 0: sin esto, en web los campos no se encogen y la fila se sale de la pantalla.
-  flex: { flex: 1, minWidth: 0 },
   legal: { gap: spacing.md },
   legalText: { fontSize: 13, lineHeight: 19, color: colors.textSecondary },
   link: { color: colors.primary, fontWeight: '600' },

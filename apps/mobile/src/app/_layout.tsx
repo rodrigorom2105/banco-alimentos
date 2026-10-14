@@ -11,7 +11,8 @@ import { AppProviders, useAuth } from '@/providers';
 const SIGNED_IN_SCREENS = [
   'donation/new',
   'donation/index',
-  'donation/[id]',
+  'donation/[id]/index',
+  'donation/[id]/edit',
   'notifications',
   'my-campaigns/index',
   'my-campaigns/new',
@@ -19,11 +20,13 @@ const SIGNED_IN_SCREENS = [
   'my-campaigns/[id]/edit',
   'volunteer/apply',
   'volunteer/dashboard',
+  'volunteer/availability',
   // Panel de administrador. Además de estar protegidas por sesión, cada pantalla esconde su
   // contenido a quien no es admin (AdminOnly) y el backend responde 403 a sus endpoints.
   'admin/index',
   'admin/campaigns',
   'admin/support',
+  'admin/donations',
   'admin/volunteers/index',
   'admin/volunteers/[id]',
   'admin/centers/new',

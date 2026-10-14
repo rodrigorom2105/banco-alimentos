@@ -7,8 +7,9 @@ import { colors, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { donationsApi } from '../api/donationsApi';
-import { DONATION_STATUS, isOpen, ITEM_UNIT_LABELS } from '../labels';
-import type { MyDonationRequest } from '../types';
+import { useRequestVolunteer } from '../hooks/useMyDonations';
+import { donationStatus, isOpen, ITEM_UNIT_LABELS } from '../labels';
+import { activePickup, type MyDonationRequest } from '../types';
 
 type Props = { donation: MyDonationRequest; onChanged: () => void };
 
@@ -25,7 +26,11 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export function MyDonationDetail({ donation, onChanged }: Props) {
   const [isCancelling, setIsCancelling] = useState(false);
-  const status = DONATION_STATUS[donation.status];
+  const pickup = activePickup(donation);
+  const status = donationStatus(donation.status, !!pickup?.accepted_at);
+  // El nombre solo se pide (y se muestra) cuando alguien ya confirmó: mientras sea una
+  // propuesta, el voluntario puede rechazarla y el donador habría leído un nombre en balde.
+  const { volunteer } = useRequestVolunteer(donation.id, !!pickup?.accepted_at);
 
   const cancel = async (reason: string) => {
     await donationsApi.cancel(donation.id, reason);
@@ -44,6 +49,18 @@ export function MyDonationDetail({ donation, onChanged }: Props) {
           <View style={styles.notice}>
             <Text style={styles.label}>Motivo de la cancelación</Text>
             <Text style={styles.value}>{donation.cancellation_reason}</Text>
+          </View>
+        )}
+
+        {volunteer && (
+          <View style={styles.card}>
+            <Row
+              label="Tu voluntario"
+              value={`${volunteer.firstName} ${volunteer.lastName}`.trim()}
+            />
+            <Text style={styles.hint}>
+              Confirmó que va a pasar por tu donativo. Si necesitas algo, comunícate con BAMX.
+            </Text>
           </View>
         )}
 
@@ -87,6 +104,17 @@ export function MyDonationDetail({ donation, onChanged }: Props) {
           ))}
         </View>
 
+        {/* Editar solo mientras nadie se haya comprometido. Si el voluntario ya confirmó, el
+            backend rechaza el cambio: organizó su día alrededor de esa hora. */}
+        {isOpen(donation.status) && !pickup?.accepted_at && (
+          <Button
+            title="Editar"
+            onPress={() =>
+              router.push({ pathname: '/donation/[id]/edit', params: { id: donation.id } })
+            }
+          />
+        )}
+
         {isOpen(donation.status) && (
           <Button
             title="Cancelar solicitud"
@@ -104,8 +132,8 @@ export function MyDonationDetail({ donation, onChanged }: Props) {
         visible={isCancelling}
         title="Cancelar solicitud"
         message={
-          donation.status === 'assigned'
-            ? 'Ya hay un voluntario asignado: se le avisará que la recolección se canceló.'
+          pickup
+            ? 'Ya hay un voluntario con tu recolección: se le avisará que se canceló.'
             : 'La solicitud dejará de buscar voluntario.'
         }
         placeholder="Ej. Ya entregué el donativo en un centro de acopio"

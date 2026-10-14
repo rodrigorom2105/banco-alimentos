@@ -69,6 +69,14 @@ export function AdminMenu() {
       pending: counts.support,
     },
     {
+      key: 'donations',
+      icon: 'package-variant-closed',
+      title: 'Donaciones sin voluntario',
+      description: 'Donativos a domicilio que la plataforma no pudo asignar',
+      href: '/admin/donations',
+      pending: counts.donations,
+    },
+    {
       key: 'centers',
       icon: 'store-outline',
       title: 'Registrar Centro BAMX',

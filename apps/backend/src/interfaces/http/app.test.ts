@@ -8,15 +8,20 @@ import { loadEnv } from '../../infrastructure/config/env';
 import {
   CAMPAIGN_ID,
   InMemoryCampaignRepository,
+  InMemoryDonationRequestRepository,
   InMemoryNotifier,
+  InMemoryPickupRepository,
   InMemorySupportRequestRepository,
   InMemoryUserRepository,
   InMemoryVolunteerRepository,
+  PICKUP_ID,
+  REQUEST_ID,
   SUPPORT_ID,
   VOLUNTEER_ID,
   fakeAuth,
   fixedClock,
   makeCampaign,
+  makeDonationRequest,
   makeSupportRequest,
   makeVolunteer,
 } from '../../test-support/inMemory';
@@ -31,11 +36,45 @@ const env = loadEnv({
 let server: Server | undefined;
 
 // Levanta la app real (rutas, middlewares y casos de uso) con adaptadores en memoria.
+const CENTER = {
+  id: 'centro-gdl',
+  name: 'Centro BAMX Guadalajara',
+  municipalityId: 1,
+  coordinates: { latitude: 20.7, longitude: -103.344 },
+};
+
+// Una recolección ya propuesta al voluntario de `makeVolunteer`, para probar aceptar y rechazar.
+// Es una función y no una constante porque los adaptadores en memoria la modifican: compartir
+// el mismo objeto entre tests haría que el resultado dependiera del orden en que corren.
+const offered = () => ({
+  id: PICKUP_ID,
+  requestId: REQUEST_ID,
+  volunteerId: VOLUNTEER_ID,
+  destinationCampaignId: CENTER.id,
+  status: 'assigned' as const,
+  assignedAt: '2026-09-25T08:00:00.000Z',
+  acceptedAt: null,
+  preferredDate: '2026-10-28',
+  stop: {
+    id: 'stop',
+    coordinates: { latitude: 20.6736, longitude: -103.344 },
+    destination: CENTER.coordinates,
+    timeFrom: '10:00:00',
+  },
+});
+
 async function start() {
-  const campaigns = new InMemoryCampaignRepository([makeCampaign()]);
-  const volunteers = new InMemoryVolunteerRepository([makeVolunteer()]);
+  const campaigns = new InMemoryCampaignRepository([makeCampaign()], [CENTER]);
+  // El primero queda `pending` porque los tests de revisión lo aprueban; el segundo ya está
+  // aprobado para que la asignación automática tenga a quién elegir.
+  const volunteers = new InMemoryVolunteerRepository([
+    makeVolunteer(),
+    makeVolunteer({ id: 'v2', userId: 'u2', status: 'approved' }),
+  ]);
   const support = new InMemorySupportRequestRepository([makeSupportRequest()]);
   const users = new InMemoryUserRepository();
+  const donationRequests = new InMemoryDonationRequestRepository([makeDonationRequest()]);
+  const pickups = new InMemoryPickupRepository([offered()]);
   const notifier = new InMemoryNotifier();
   await users.grantRole('admin', 'admin', null);
   const app = createApp(
@@ -44,6 +83,8 @@ async function start() {
       volunteers,
       support,
       users,
+      donationRequests,
+      pickups,
       auth: fakeAuth,
       clock: fixedClock('2026-09-25'),
       notifier,
@@ -61,7 +102,7 @@ async function start() {
         ...(init.headers as Record<string, string> | undefined),
       },
     });
-  return { call, campaigns, volunteers, support, notifier };
+  return { call, campaigns, volunteers, support, pickups, notifier };
 }
 
 afterEach(() => {
@@ -234,6 +275,131 @@ describe('API HTTP', () => {
       body: JSON.stringify({ name: 'Centro', address: 'Calle 1', municipalityId: 1 }),
     });
     expect(res.status).toBe(400);
+  });
+
+  // --- Asignación automática de recolecciones (Fase 8) ---
+
+  it('el donador pide la asignación de su solicitud', async () => {
+    const { call, pickups } = await start();
+    // La solicitud de prueba ya tiene una propuesta viva, así que primero se cancela para
+    // dejarla libre, igual que haría un rechazo.
+    await pickups.saveCancellation(PICKUP_ID, 'Prueba');
+
+    const res = await call(`/donation-requests/${REQUEST_ID}/assign`, {
+      method: 'POST',
+      token: 'token-donor',
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ assigned: true });
+  });
+
+  it('un extraño no puede asignar la solicitud de otro (403)', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}/assign`, {
+      method: 'POST',
+      token: 'token-organizer',
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('solo un admin ve las donaciones sin voluntario', async () => {
+    const { call } = await start();
+    expect(
+      (await call('/admin/donation-requests?unassigned=true', { token: 'token-admin' })).status,
+    ).toBe(200);
+    expect((await call('/admin/donation-requests', { token: 'token-donor' })).status).toBe(403);
+  });
+
+  it('el donador corrige su solicitud', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-donor',
+      body: JSON.stringify({
+        address: 'Av. Vallarta 1234',
+        municipalityId: 1,
+        latitude: 20.6736,
+        longitude: -103.344,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: '10:00:00',
+        preferredTimeTo: '12:00:00',
+        notes: 'Portón azul',
+      }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ updated: true });
+  });
+
+  it('un extraño no puede editar la solicitud de otro (403)', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-organizer',
+      body: JSON.stringify({
+        address: 'Calle 1',
+        municipalityId: 1,
+        latitude: 20.6,
+        longitude: -103.3,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: '10:00:00',
+        preferredTimeTo: '12:00:00',
+      }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('editar con un horario inválido responde 400', async () => {
+    const { call } = await start();
+    const res = await call(`/donation-requests/${REQUEST_ID}`, {
+      method: 'PATCH',
+      token: 'token-donor',
+      body: JSON.stringify({
+        address: 'Calle 1',
+        municipalityId: 1,
+        latitude: 20.6,
+        longitude: -103.3,
+        preferredDate: '2026-10-28',
+        preferredTimeFrom: 'mañana',
+        preferredTimeTo: '12:00:00',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('el voluntario acepta la recolección que se le propuso', async () => {
+    const { call, pickups } = await start();
+    const res = await call(`/pickups/${PICKUP_ID}/accept`, {
+      method: 'POST',
+      token: 'token-volunteer-user',
+    });
+    expect(res.status).toBe(200);
+    expect(pickups.accepted).toEqual([PICKUP_ID]);
+  });
+
+  it('otro voluntario no puede contestar esa propuesta (403)', async () => {
+    const { call } = await start();
+    const res = await call(`/pickups/${PICKUP_ID}/accept`, { method: 'POST', token: 'token-u2' });
+    expect(res.status).toBe(403);
+  });
+
+  it('rechazar sin motivo responde 400', async () => {
+    const { call } = await start();
+    const res = await call(`/pickups/${PICKUP_ID}/decline`, {
+      method: 'POST',
+      token: 'token-volunteer-user',
+      body: JSON.stringify({ reason: '  ' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('el voluntario ve sus recolecciones y nadie más las ve por él', async () => {
+    const { call } = await start();
+    const mine = await call('/volunteer/pickups', { token: 'token-volunteer-user' });
+    expect(mine.status).toBe(200);
+    expect((await mine.json()) as unknown[]).toHaveLength(1);
+    // Quien no tiene solicitud de voluntariado no tiene recolecciones que ver.
+    expect((await call('/volunteer/pickups', { token: 'token-donor' })).status).toBe(404);
   });
 
   it('una acción inválida para el estado responde 409', async () => {

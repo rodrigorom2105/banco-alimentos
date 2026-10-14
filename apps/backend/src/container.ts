@@ -5,6 +5,16 @@ import {
   ListCampaignsForReview,
   RejectCampaign,
 } from './application/campaigns/reviewCampaign';
+import {
+  AutoAssignPickup,
+  ListUnassignedDonationRequests,
+} from './application/donations/autoAssignPickup';
+import { UpdateDonationRequest } from './application/donations/updateDonationRequest';
+import {
+  AcceptPickup,
+  DeclinePickup,
+  ListMyPickups,
+} from './application/pickups/respondToPickupOffer';
 import type { AuthService, Clock } from './application/ports';
 import {
   DeliverSupportRequest,
@@ -21,7 +31,9 @@ import {
   SuspendVolunteer,
 } from './application/volunteers/reviewVolunteer';
 import type { CampaignRepository } from './domain/campaigns/CampaignRepository';
+import type { DonationRequestRepository } from './domain/donations/DonationRequestRepository';
 import type { Notifier } from './domain/notifications/Notifier';
+import type { PickupRepository } from './domain/pickups/PickupRepository';
 import type { SupportRequestRepository } from './domain/support/SupportRequestRepository';
 import type { UserRepository } from './domain/users/UserRepository';
 import type { VolunteerRepository } from './domain/volunteers/VolunteerRepository';
@@ -30,7 +42,9 @@ import type { Env } from './infrastructure/config/env';
 import { createSupabaseAdmin } from './infrastructure/supabase/client';
 import { SupabaseAuthService } from './infrastructure/supabase/SupabaseAuthService';
 import { SupabaseCampaignRepository } from './infrastructure/supabase/SupabaseCampaignRepository';
+import { SupabaseDonationRequestRepository } from './infrastructure/supabase/SupabaseDonationRequestRepository';
 import { SupabaseNotifier } from './infrastructure/supabase/SupabaseNotifier';
+import { SupabasePickupRepository } from './infrastructure/supabase/SupabasePickupRepository';
 import { SupabaseSupportRequestRepository } from './infrastructure/supabase/SupabaseSupportRequestRepository';
 import { SupabaseUserRepository } from './infrastructure/supabase/SupabaseUserRepository';
 import { SupabaseVolunteerRepository } from './infrastructure/supabase/SupabaseVolunteerRepository';
@@ -40,6 +54,8 @@ type Adapters = {
   volunteers: VolunteerRepository;
   support: SupportRequestRepository;
   users: UserRepository;
+  donationRequests: DonationRequestRepository;
+  pickups: PickupRepository;
   auth: AuthService;
   clock: Clock;
   notifier: Notifier;
@@ -54,11 +70,33 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
     volunteers: new SupabaseVolunteerRepository(db),
     support: new SupabaseSupportRequestRepository(db),
     users: new SupabaseUserRepository(db),
+    donationRequests: new SupabaseDonationRequestRepository(db),
+    pickups: new SupabasePickupRepository(db),
     auth: new SupabaseAuthService(db),
     clock: systemClock,
     notifier: new SupabaseNotifier(db),
     ...overrides,
   };
+
+  // Los topes de la asignación viven en la configuración, no en el código: se arman aquí una
+  // sola vez y se inyectan, igual que un adaptador.
+  const limits = {
+    maxPickupsPerDay: env.ASSIGNMENT_MAX_PICKUPS_PER_DAY,
+    maxRouteKm: env.ASSIGNMENT_MAX_ROUTE_KM,
+    maxPickupsPerMonth: env.ASSIGNMENT_MAX_PICKUPS_PER_MONTH,
+  };
+  const offerHours = env.ASSIGNMENT_OFFER_HOURS;
+
+  const autoAssignPickup = new AutoAssignPickup(
+    adapters.donationRequests,
+    adapters.pickups,
+    adapters.volunteers,
+    adapters.campaigns,
+    adapters.notifier,
+    adapters.clock,
+    limits,
+    offerHours,
+  );
 
   return {
     env,
@@ -68,6 +106,8 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       volunteers: adapters.volunteers,
       support: adapters.support,
       users: adapters.users,
+      donationRequests: adapters.donationRequests,
+      pickups: adapters.pickups,
     },
     useCases: {
       listCampaignsForReview: new ListCampaignsForReview(adapters.campaigns),
@@ -88,6 +128,30 @@ export function buildContainer(env: Env, overrides: Partial<Adapters> = {}) {
       respondSupportRequest: new RespondSupportRequest(adapters.support, adapters.notifier),
       deliverSupportRequest: new DeliverSupportRequest(adapters.support, adapters.notifier),
       grantAdminRole: new GrantAdminRole(adapters.users),
+      autoAssignPickup,
+      listUnassignedDonationRequests: new ListUnassignedDonationRequests(
+        adapters.donationRequests,
+        adapters.clock,
+        offerHours,
+      ),
+      listMyPickups: new ListMyPickups(adapters.pickups, adapters.volunteers),
+      acceptPickup: new AcceptPickup(
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.donationRequests,
+        adapters.notifier,
+      ),
+      // Rechazar reasigna: por eso recibe el caso de uso de asignación, no un repositorio.
+      declinePickup: new DeclinePickup(adapters.pickups, adapters.volunteers, autoAssignPickup),
+      // Editar también puede reasignar, si cambia el día, el horario o dónde se recoge.
+      updateDonationRequest: new UpdateDonationRequest(
+        adapters.donationRequests,
+        adapters.pickups,
+        adapters.volunteers,
+        adapters.notifier,
+        autoAssignPickup,
+        adapters.clock,
+      ),
     },
   };
 }

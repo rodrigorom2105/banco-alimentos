@@ -15,11 +15,11 @@ import { colors, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { useMyDonations } from '../hooks/useMyDonations';
-import { DONATION_STATUS, isOpen } from '../labels';
-import type { MyDonationRequest } from '../types';
+import { donationStatus, isOpen } from '../labels';
+import { activePickup, type MyDonationRequest } from '../types';
 
 function DonationRow({ donation }: { donation: MyDonationRequest }) {
-  const status = DONATION_STATUS[donation.status];
+  const status = donationStatus(donation.status, !!activePickup(donation)?.accepted_at);
   const products = donation.items.length;
 
   return (
