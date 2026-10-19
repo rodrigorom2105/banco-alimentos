@@ -1,21 +1,36 @@
+// Paleta "Solidaridad cercana", tomada de los píxeles del logo de BAMX. Los mismos valores
+// viven en global.css (@theme): si cambias uno, cámbialo en ambos.
 export const colors = {
-  primary: '#607B73',
-  primaryLight: '#839E8A',
-  primaryDark: '#3E5A52',
-  text: '#11181C',
-  textSecondary: '#717777',
-  background: '#FFFFFF',
-  backgroundTint: '#C4DCCF',
-  surface: '#E4E4E4',
-  border: '#DDDDDD',
-  danger: '#E5484D',
+  primary: '#CE0E2D',
+  primaryLight: '#F9CBD3',
+  primaryDark: '#B00C26',
+  accent: '#F19800',
+  success: '#00953B',
+  successTint: '#E5F4EB',
+  text: '#59595D',
+  textSecondary: '#78787C',
+  background: '#FFFBF5',
+  backgroundTint: '#FDECEF',
+  surface: '#F4F4F5',
+  border: '#E6E1DA',
+  danger: '#B3261E',
   dangerTint: '#FDECEC',
-  warning: '#9A6700',
-  warningTint: '#FFF4D6',
+  warning: '#C87D00',
+  warningTint: '#FFF5E0',
+} as const;
+
+// Nombres de las fuentes cargadas en _layout.tsx. Con una fuente personalizada no se usa
+// fontWeight: cada peso es su propia fuente.
+export const fonts = {
+  title: 'Nunito_800ExtraBold',
+  heading: 'Nunito_700Bold',
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodyBold: 'Inter_600SemiBold',
 } as const;
 
 export const gradients = {
-  auth: ['#F1F1F1', '#E1ECE2'],
+  auth: ['#FFFBF5', '#FDECEF'],
 } as const;
 
 export const spacing = {
@@ -27,9 +42,9 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  sm: 6,
-  md: 10,
-  lg: 20,
+  sm: 8,
+  md: 16,
+  lg: 24,
   pill: 40,
 } as const;
 

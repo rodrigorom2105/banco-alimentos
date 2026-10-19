@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 type Props = {
   label: string;
@@ -35,5 +35,5 @@ const styles = StyleSheet.create({
   selected: { backgroundColor: colors.primary, borderColor: colors.primary },
   disabled: { opacity: 0.4 },
   label: { fontSize: 13, color: colors.text },
-  selectedLabel: { color: colors.background, fontWeight: '600' },
+  selectedLabel: { color: colors.background, fontFamily: fonts.bodyBold },
 });

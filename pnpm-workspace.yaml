@@ -9,6 +9,11 @@ packages:
 # Al cambiar esto hay que borrar node_modules y reinstalar.
 nodeLinker: hoisted
 
+# NativeWind 5 necesita exactamente esta versión: el JS de lightningcss y su binario nativo
+# (lightningcss-*) deben coincidir, y Expo arrastra una 1.33 que no los hace coincidir.
+overrides:
+  lightningcss: 1.30.1
+
 allowBuilds:
   # Su script solo es el respaldo cuando no hay binario precompilado (@tailwindcss/oxide-*).
   '@tailwindcss/oxide': false

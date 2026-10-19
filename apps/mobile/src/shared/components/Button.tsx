@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 type Props = {
   title: string;
@@ -41,6 +41,6 @@ const styles = StyleSheet.create({
   },
   outline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
   dimmed: { opacity: 0.6 },
-  text: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  text: { color: '#fff', fontFamily: fonts.heading, fontSize: 16 },
   outlineText: { color: colors.primary },
 });

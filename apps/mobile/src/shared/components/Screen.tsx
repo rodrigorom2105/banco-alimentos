@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts, spacing } from '@/shared/theme';
 
 type Props = {
   children: ReactNode;
@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pressed: { opacity: 0.6 },
-  title: { flex: 1, fontSize: 24, color: colors.text },
+  title: { flex: 1, fontSize: 24, fontFamily: fonts.title, color: colors.text },
   body: { flex: 1 },
 });

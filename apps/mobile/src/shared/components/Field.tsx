@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts, spacing } from '@/shared/theme';
 
 type Props = {
   label: string;
@@ -27,7 +27,7 @@ export function Field({ label, children, error, hint, style }: Props) {
 
 const styles = StyleSheet.create({
   field: { gap: spacing.xs },
-  label: { fontSize: 16, fontWeight: '500', color: colors.text },
+  label: { fontSize: 16, fontFamily: fonts.bodyMedium, color: colors.text },
   error: { fontSize: 12, color: colors.danger },
   hint: { fontSize: 12, color: colors.textSecondary },
 });

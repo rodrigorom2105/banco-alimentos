@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts, spacing } from '@/shared/theme';
 
 import { Button } from './Button';
 
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  title: { fontSize: 22, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
+  title: { fontSize: 22, fontFamily: fonts.title, color: colors.text, textAlign: 'center' },
   message: { fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
   action: { alignSelf: 'stretch', marginTop: spacing.md },
 });

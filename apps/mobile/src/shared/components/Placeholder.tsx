@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts, spacing } from '@/shared/theme';
 
 // Pantalla informativa para rutas sin contenido todavía o sin permiso.
 export function Placeholder({ title, message }: { title: string; message: string }) {
@@ -23,6 +23,6 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  title: { fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: fonts.heading, color: colors.text, textAlign: 'center' },
   message: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, StyleSheet, Text, View } from 'react-native';
 
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { Button } from './Button';
 import { Input } from './Input';
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.background,
   },
-  title: { fontSize: 18, fontWeight: 'bold', color: colors.text },
+  title: { fontSize: 18, fontFamily: fonts.heading, color: colors.text },
   message: { fontSize: 14, color: colors.textSecondary },
   input: { minHeight: 90, textAlignVertical: 'top' },
   error: { fontSize: 12, color: colors.danger },

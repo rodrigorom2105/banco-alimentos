@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger';
 
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: fonts.heading,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.sm,
