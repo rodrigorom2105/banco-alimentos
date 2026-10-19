@@ -10,6 +10,8 @@ packages:
 nodeLinker: hoisted
 
 allowBuilds:
+  # Su script solo es el respaldo cuando no hay binario precompilado (@tailwindcss/oxide-*).
+  '@tailwindcss/oxide': false
   unrs-resolver: false
 
 minimumReleaseAgeExclude:

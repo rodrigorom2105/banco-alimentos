@@ -1,0 +1,47 @@
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
+
+@import 'nativewind/theme';
+
+/* Tokens del design system "Solidaridad cercana". Los hex son aproximados al logo de BAMX;
+   ajustar con gotero si hace falta. */
+@theme {
+  /* Rojo BAMX: acción principal */
+  --color-brand-50: #fdecef;
+  --color-brand-100: #f9cbd3;
+  --color-brand-500: #c8102e;
+  --color-brand-600: #a90d26;
+  --color-brand-700: #8a0a1f;
+
+  /* Naranja/ámbar: acentos y campañas activas */
+  --color-accent-50: #fff5e0;
+  --color-accent-100: #ffe4ad;
+  --color-accent-500: #f09a00;
+  --color-accent-600: #c77f00;
+
+  /* Gris carbón: texto y títulos */
+  --color-carbon-50: #f4f4f5;
+  --color-carbon-200: #d4d4d6;
+  --color-carbon-500: #58595b;
+  --color-carbon-700: #3e3f41;
+  --color-carbon-900: #232425;
+
+  /* Verde hoja: éxito, entregado, abierto */
+  --color-leaf-50: #e8f5ea;
+  --color-leaf-500: #2e9b3e;
+  --color-leaf-700: #1f7430;
+
+  /* Fondos */
+  --color-cream: #fffbf5;
+
+  --font-title: Nunito_800ExtraBold;
+  --font-heading: Nunito_700Bold;
+  --font-body: Inter_400Regular;
+  --font-body-medium: Inter_500Medium;
+  --font-body-bold: Inter_600SemiBold;
+
+  --radius-card: 20px;
+  --radius-button: 16px;
+  --radius-pill: 999px;
+}
