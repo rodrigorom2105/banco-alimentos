@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Input, Select } from '@/shared/components';
 import type { ProductCategory } from '@/shared/lib/catalogs';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { ITEM_UNIT_LABELS, type ItemUnit } from '../labels';
 
@@ -76,13 +76,14 @@ export function DonationItemRow({ index, item, categories, onChange, onRemove }:
 const styles = StyleSheet.create({
   container: {
     gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 13, color: colors.textSecondary },
+  title: { fontSize: 14, fontFamily: fonts.heading, color: colors.text },
   quantityRow: { flexDirection: 'row', gap: spacing.sm },
   quantity: { flex: 1, minWidth: 0 },
   unit: { width: 130 },

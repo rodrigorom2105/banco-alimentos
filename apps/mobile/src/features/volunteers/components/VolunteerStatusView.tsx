@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   neutral: { borderColor: colors.border, backgroundColor: colors.background },
-  success: { borderColor: colors.primary, backgroundColor: colors.backgroundTint },
+  success: { borderColor: colors.success, backgroundColor: colors.successTint },
   danger: { borderColor: colors.danger, backgroundColor: colors.dangerTint },
   cardTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
   text: { fontSize: 14, lineHeight: 20, color: colors.text, textAlign: 'center' },

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button, PromptModal, StatusBadge } from '@/shared/components';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { donationsApi } from '../api/donationsApi';
@@ -153,13 +153,19 @@ const styles = StyleSheet.create({
   card: {
     gap: spacing.md,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+  cardTitle: { fontSize: 18, fontFamily: fonts.heading, color: colors.text },
   notice: { gap: 2, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface },
   row: { gap: 2 },
-  label: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
+  label: {
+    fontSize: 12,
+    fontFamily: fonts.heading,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+  },
   value: { fontSize: 15, color: colors.text },
 });

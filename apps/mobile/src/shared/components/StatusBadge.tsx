@@ -1,28 +1,19 @@
-import { StyleSheet, Text } from 'react-native';
-
-import { colors, fonts, radius, spacing } from '@/shared/theme';
+import { Text, View } from 'react-native';
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger';
 
-const TONES: Record<BadgeTone, { backgroundColor: string; color: string }> = {
-  neutral: { backgroundColor: colors.surface, color: colors.textSecondary },
-  success: { backgroundColor: colors.backgroundTint, color: colors.primary },
-  warning: { backgroundColor: colors.warningTint, color: colors.warning },
-  danger: { backgroundColor: colors.dangerTint, color: colors.danger },
+// Fondo y texto de cada tono: verde = éxito, ámbar = en espera, rojo = problema.
+const TONES: Record<BadgeTone, { box: string; text: string }> = {
+  neutral: { box: 'bg-carbon-50', text: 'text-carbon-500' },
+  success: { box: 'bg-leaf-50', text: 'text-leaf-700' },
+  warning: { box: 'bg-accent-50', text: 'text-accent-600' },
+  danger: { box: 'bg-brand-50', text: 'text-brand-600' },
 };
 
 export function StatusBadge({ label, tone = 'neutral' }: { label: string; tone?: BadgeTone }) {
-  return <Text style={[styles.badge, TONES[tone]]}>{label}</Text>;
+  return (
+    <View className={`self-start rounded-full px-3 py-1 ${TONES[tone].box}`}>
+      <Text className={`font-heading text-xs ${TONES[tone].text}`}>{label}</Text>
+    </View>
+  );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    alignSelf: 'flex-start',
-    fontSize: 12,
-    fontFamily: fonts.heading,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-  },
-});

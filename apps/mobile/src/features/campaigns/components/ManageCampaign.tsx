@@ -7,7 +7,7 @@ import { useAuth } from '@/providers';
 import { Button, PromptModal, StatusBadge } from '@/shared/components';
 import { confirm } from '@/shared/lib/confirm';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { campaignsApi } from '../api/campaignsApi';
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, gap: spacing.lg },
   header: { gap: spacing.sm },
-  name: { fontSize: 24, fontWeight: 'bold', color: colors.text },
+  name: { fontSize: 26, fontFamily: fonts.title, color: colors.text },
   badges: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   infoText: { flex: 1, fontSize: 14, color: colors.text },
@@ -280,26 +280,28 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.dangerTint,
   },
-  noticeTitle: { fontWeight: '600', color: colors.danger },
+  noticeTitle: { fontFamily: fonts.heading, color: colors.danger },
   noticeText: { color: colors.text },
   section: { gap: spacing.sm },
-  sectionTitle: { fontSize: 18, color: colors.text },
+  sectionTitle: { fontSize: 18, fontFamily: fonts.heading, color: colors.text },
   supportRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   supportLabel: { fontSize: 15, color: colors.text },
   supportButton: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primaryLight,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
   },
-  supportButtonText: { color: colors.background, fontWeight: '600' },
+  supportButtonText: { color: '#FFFFFF', fontFamily: fonts.heading },
   historyRow: {
     gap: spacing.xs,
     padding: spacing.md,
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  historyType: { fontWeight: '600', color: colors.text },
+  historyType: { fontFamily: fonts.heading, color: colors.text },
   historyText: { fontSize: 14, color: colors.text },
   historyResponse: { fontSize: 13, color: colors.textSecondary, fontStyle: 'italic' },
   stats: { flexDirection: 'row', gap: spacing.sm },
@@ -318,10 +320,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   statLabel: { fontSize: 14, color: colors.text },
-  statValue: { fontSize: 28, fontWeight: 'bold', color: colors.textSecondary },
+  statValue: { fontSize: 28, fontFamily: fonts.title, color: colors.textSecondary },
   statHint: { fontSize: 11, color: colors.textSecondary },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },

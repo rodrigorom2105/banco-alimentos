@@ -1,14 +1,25 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 import { useMyProfile } from '../hooks/useMyProfile';
 
-function Row({ label, value }: { label: string; value: string }) {
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+function Row({ icon, label, value }: { icon: IconName; label: string; value: string }) {
   return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+    <View className="flex-row items-center gap-3">
+      <View className="h-10 w-10 items-center justify-center rounded-full bg-carbon-50">
+        <MaterialCommunityIcons name={icon} size={20} color={colors.text} />
+      </View>
+      <View className="flex-1">
+        <Text className="font-heading text-xs uppercase tracking-wide text-carbon-500">
+          {label}
+        </Text>
+        <Text className="font-body text-base text-carbon-900">{value}</Text>
+      </View>
     </View>
   );
 }
@@ -17,31 +28,25 @@ export function ProfileDetails() {
   const { profile, email, isLoading, error } = useMyProfile();
 
   if (isLoading) return <ActivityIndicator color={colors.primary} />;
-  if (error) return <Text style={styles.error}>{error}</Text>;
+  if (error) return <Text className="font-body text-sm text-brand-600">{error}</Text>;
 
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : '—';
+  const initials = profile
+    ? `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+    : '?';
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.name}>{fullName}</Text>
-      <Row label="Correo" value={email ?? '—'} />
-      <Row label="Teléfono" value={profile?.phone || 'Sin registrar'} />
+    <View className="gap-5 rounded-card border border-line bg-white p-6">
+      <View className="items-center gap-3">
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-brand-50">
+          <Text className="font-title text-3xl text-brand-500">{initials}</Text>
+        </View>
+        <Text className="text-center font-title text-2xl text-carbon-900">{fullName}</Text>
+      </View>
+      <View className="gap-4">
+        <Row icon="email-outline" label="Correo" value={email ?? '—'} />
+        <Row icon="phone-outline" label="Teléfono" value={profile?.phone || 'Sin registrar'} />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  name: { fontSize: 22, fontWeight: 'bold', color: colors.primary },
-  row: { gap: 2 },
-  label: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
-  value: { fontSize: 16, color: colors.text },
-  error: { color: colors.danger },
-});
