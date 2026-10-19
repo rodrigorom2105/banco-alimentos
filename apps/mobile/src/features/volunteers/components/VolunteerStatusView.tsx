@@ -4,11 +4,18 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MyPickupList } from '@/features/pickups';
 import { Button } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { WEEKDAY_LABELS } from '../labels';
 import type { MyVolunteerApplication } from '../types';
+
+// El ícono sigue el tono de la tarjeta: ámbar en espera, rojo en problema, verde en éxito.
+const ICON_COLORS = {
+  neutral: colors.accent,
+  danger: colors.danger,
+  success: colors.success,
+} as const;
 
 type Props = {
   application: MyVolunteerApplication;
@@ -32,11 +39,7 @@ function Card({
 }) {
   return (
     <View style={[styles.card, styles[tone]]}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={36}
-        color={tone === 'danger' ? colors.danger : colors.primary}
-      />
+      <MaterialCommunityIcons name={icon} size={36} color={ICON_COLORS[tone]} />
       <Text style={styles.cardTitle}>{title}</Text>
       {children}
     </View>
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
   neutral: { borderColor: colors.border, backgroundColor: colors.background },
   success: { borderColor: colors.success, backgroundColor: colors.successTint },
   danger: { borderColor: colors.danger, backgroundColor: colors.dangerTint },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
+  cardTitle: { fontSize: 18, fontFamily: fonts.heading, color: colors.text, textAlign: 'center' },
   text: { fontSize: 14, lineHeight: 20, color: colors.text, textAlign: 'center' },
   left: { textAlign: 'left' },
   label: {
@@ -146,10 +149,16 @@ const styles = StyleSheet.create({
   summary: {
     gap: 2,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
-  summaryTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
+  summaryTitle: {
+    fontSize: 16,
+    fontFamily: fonts.heading,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
   summaryAction: { marginTop: spacing.md },
 });

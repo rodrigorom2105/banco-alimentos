@@ -4,7 +4,7 @@ import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'r
 
 import { Button, PromptModal, StatusBadge } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth, todayISO } from '@/shared/utils';
 
 import { pickupsApi } from '../api/pickupsApi';
@@ -248,30 +248,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
-  counterValue: { fontSize: 24, fontWeight: 'bold', color: colors.primary },
+  counterValue: { fontSize: 24, fontFamily: fonts.title, color: colors.primary },
   counterLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginTop: spacing.xs },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: fonts.heading,
+    color: colors.text,
+    marginTop: spacing.xs,
+  },
   group: { gap: spacing.sm },
-  groupTitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  groupTitle: { fontSize: 13, fontFamily: fonts.heading, color: colors.textSecondary },
   card: {
     gap: spacing.xs,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   // La propuesta por confirmar se distingue: es lo único que pide una decisión.
   offer: { borderColor: colors.primary, backgroundColor: colors.backgroundTint },
   pressed: { opacity: 0.7 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  date: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
+  date: { flex: 1, fontSize: 16, fontFamily: fonts.heading, color: colors.text },
   detail: { fontSize: 13, color: colors.textSecondary },
   deadline: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
-  open: { fontSize: 13, fontWeight: '600', color: colors.primary, marginTop: spacing.xs },
+  open: { fontSize: 13, fontFamily: fonts.heading, color: colors.primary, marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   action: { flex: 1 },
   empty: { fontSize: 14, lineHeight: 20, color: colors.textSecondary },

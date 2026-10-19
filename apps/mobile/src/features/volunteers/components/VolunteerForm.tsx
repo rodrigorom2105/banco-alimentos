@@ -6,7 +6,7 @@ import { profileApi, useMyProfile } from '@/features/profile';
 import { useAuth } from '@/providers';
 import { Button, Field, FormScreen, Input, SuccessState } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts, spacing } from '@/shared/theme';
 
 import { volunteersApi } from '../api/volunteersApi';
 import { chooseProofOfAddress, choosePhoto, takePhoto } from '../pickers';
@@ -219,6 +219,6 @@ export function VolunteerForm({ application }: { application?: MyVolunteerApplic
 const styles = StyleSheet.create({
   legal: { gap: spacing.md },
   legalText: { fontSize: 13, lineHeight: 19, color: colors.textSecondary },
-  link: { color: colors.primary, fontWeight: '600' },
+  link: { color: colors.primary, fontFamily: fonts.heading },
   submitError: { color: colors.danger, textAlign: 'center' },
 });

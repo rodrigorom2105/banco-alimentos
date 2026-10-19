@@ -6,7 +6,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { Button, PromptModal, StatusBadge } from '@/shared/components';
 import { useAuth } from '@/providers';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { pickupsApi } from '../api/pickupsApi';
@@ -234,21 +234,22 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, gap: spacing.md },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  date: { flex: 1, fontSize: 18, fontWeight: 'bold', color: colors.text },
+  date: { flex: 1, fontSize: 18, fontFamily: fonts.heading, color: colors.text },
   card: {
     gap: spacing.sm,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+  cardTitle: { fontSize: 16, fontFamily: fonts.heading, color: colors.text },
   field: { gap: 2 },
   label: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
   value: { fontSize: 15, color: colors.text },
   declared: { fontSize: 13, color: colors.textSecondary },
   call: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  callText: { fontSize: 15, fontWeight: '600', color: colors.primary },
+  callText: { fontSize: 15, fontFamily: fonts.heading, color: colors.primary },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1, minWidth: 0 },
   error: { fontSize: 13, color: colors.danger, textAlign: 'center' },

@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import type { PickedFile } from '../types';
 
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pressed: { opacity: 0.6 },
-  actionText: { color: colors.primary, fontWeight: '600' },
+  actionText: { color: colors.primary, fontFamily: fonts.heading },
   chosen: {
     flexDirection: 'row',
     alignItems: 'center',
