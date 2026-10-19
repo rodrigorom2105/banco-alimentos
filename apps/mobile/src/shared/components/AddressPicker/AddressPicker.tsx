@@ -10,7 +10,7 @@ import {
   isGeocodingAvailable,
   reverseGeocode,
 } from '@/shared/lib/geocoding';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { normalizeText, type Coordinates } from '@/shared/utils';
 
 import { Select } from '../Select';
@@ -155,7 +155,7 @@ export function AddressPicker({ value, onChange, error }: Props) {
 
       {coordinate && (
         <Text style={styles.located}>
-          <MaterialCommunityIcons name="check-circle" size={14} color={colors.primary} /> Punto
+          <MaterialCommunityIcons name="check-circle" size={14} color={colors.success} /> Punto
           marcado en el mapa
         </Text>
       )}
@@ -176,8 +176,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.surface,
   },
-  input: { flex: 1, paddingVertical: spacing.md, fontSize: 16, color: colors.text },
-  located: { fontSize: 12, color: colors.primary },
-  hint: { fontSize: 12, color: colors.textSecondary },
+  input: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    fontSize: 16,
+    fontFamily: fonts.body,
+    color: colors.text,
+  },
+  located: { fontSize: 12, fontFamily: fonts.bodyMedium, color: colors.success },
+  hint: { fontSize: 12, fontFamily: fonts.body, color: colors.textSecondary },
   error: { color: colors.danger },
 });

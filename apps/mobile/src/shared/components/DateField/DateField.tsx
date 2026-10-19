@@ -3,7 +3,7 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import { useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { Button } from '../Button';
 import { dateToValue, formatValue, valueToDate, type DateFieldMode } from './dateValue';
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   },
   // Con fecha elegida el campo se distingue: fondo blanco, borde y texto en verde oscuro.
   triggerFilled: { borderColor: colors.primaryDark, backgroundColor: colors.background },
-  value: { flex: 1, fontSize: 16, fontWeight: '500', color: colors.text },
-  placeholder: { fontWeight: '400', color: colors.textSecondary },
+  value: { flex: 1, fontSize: 16, fontFamily: fonts.bodyMedium, color: colors.text },
+  placeholder: { fontFamily: fonts.body, color: colors.textSecondary },
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet: {
     gap: spacing.md,
@@ -133,10 +133,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.lg,
     backgroundColor: colors.background,
   },
-  sheetTitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  sheetTitle: {
+    fontSize: 14,
+    fontFamily: fonts.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   sheetValue: {
     fontSize: 22,
-    fontWeight: '600',
+    fontFamily: fonts.title,
     color: colors.primaryDark,
     textAlign: 'center',
   },

@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 export type SelectOption<T> = { value: T; label: string };
 
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   disabled: { opacity: 0.7 },
-  value: { flex: 1, fontSize: 16, color: colors.text },
+  value: { flex: 1, fontSize: 16, fontFamily: fonts.body, color: colors.text },
   placeholder: { color: colors.textSecondary },
   backdrop: {
     flex: 1,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     maxHeight: '70%',
     paddingVertical: spacing.sm,
     borderRadius: radius.lg,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
   option: {
     flexDirection: 'row',
@@ -105,5 +105,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   pressed: { backgroundColor: colors.surface },
-  optionText: { fontSize: 16, color: colors.text },
+  optionText: { fontSize: 16, fontFamily: fonts.body, color: colors.text },
 });
