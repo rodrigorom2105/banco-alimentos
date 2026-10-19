@@ -1,9 +1,10 @@
+import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button, Card, Input } from '@/shared/components';
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts } from '@/shared/theme';
 
 import { useRegister } from '../hooks/useRegister';
 
@@ -18,12 +19,19 @@ export function RegisterForm() {
 
   return (
     <Card>
-      <View style={styles.header}>
-        <Text style={styles.title}>Crear cuenta</Text>
-        <Text style={styles.subtitle}>Únete y empieza a ayudar en tu comunidad</Text>
+      <View className="mb-6 items-center gap-1">
+        <Image
+          source={require('@/assets/images/BAMXlogo.png')}
+          style={{ width: 120, aspectRatio: 674 / 455 }}
+          contentFit="contain"
+        />
+        <Text className="mt-2 font-title text-2xl text-carbon-900">Crear cuenta</Text>
+        <Text className="text-center font-body text-[15px] text-carbon-500">
+          Únete y empieza a ayudar en tu comunidad
+        </Text>
       </View>
 
-      <View style={styles.fields}>
+      <View className="gap-4 self-stretch">
         <Input
           placeholder="Nombre(s)"
           value={firstName}
@@ -44,7 +52,7 @@ export function RegisterForm() {
           autoComplete="email"
           keyboardType="email-address"
         />
-        <View style={styles.group}>
+        <View className="gap-1">
           <Input
             placeholder="Teléfono (opcional)"
             value={phone}
@@ -52,11 +60,11 @@ export function RegisterForm() {
             autoComplete="tel"
             keyboardType="phone-pad"
           />
-          <Text style={styles.hint}>
+          <Text className="ml-1 font-body text-xs text-carbon-500">
             Lo necesitarás para pedir una recolección o ser voluntario.
           </Text>
         </View>
-        <View style={styles.group}>
+        <View className="gap-1">
           <Input
             placeholder="Contraseña"
             value={password}
@@ -64,7 +72,9 @@ export function RegisterForm() {
             secureTextEntry
             autoComplete="new-password"
           />
-          <Text style={styles.hint}>Mínimo 8 caracteres, una mayúscula y un número.</Text>
+          <Text className="ml-1 font-body text-xs text-carbon-500">
+            Mínimo 8 caracteres, una mayúscula y un número.
+          </Text>
         </View>
         <Input
           placeholder="Confirmar contraseña"
@@ -80,23 +90,12 @@ export function RegisterForm() {
         />
       </View>
 
-      <Text style={styles.footer}>
+      <Text className="mt-6 font-body text-[15px] text-carbon-500">
         ¿Ya tienes cuenta?{' '}
-        <Link href="/login" replace style={styles.footerLink}>
+        <Link href="/login" replace style={{ color: colors.primary, fontFamily: fonts.heading }}>
           Inicia sesión
         </Link>
       </Text>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.lg },
-  title: { fontSize: 26, fontWeight: 'bold', color: colors.primary },
-  subtitle: { fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
-  fields: { alignSelf: 'stretch', gap: spacing.md },
-  group: { gap: spacing.xs },
-  hint: { fontSize: 12, color: colors.textSecondary, marginLeft: spacing.xs },
-  footer: { marginTop: spacing.lg, fontSize: 15, color: colors.textSecondary },
-  footerLink: { color: colors.primary, fontWeight: 'bold' },
-});
