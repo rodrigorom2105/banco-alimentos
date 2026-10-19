@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
@@ -53,6 +54,11 @@ export function ExploreMap({
   onOpenCampaign,
   topInset = spacing.md,
 }: ExploreMapProps) {
+  const { width } = useWindowDimensions();
+  // Margen a los lados para que la tarjeta ajustada (snap) quede centrada: con
+  // snapToInterval cada tarjeta se detiene en su desplazamiento, y el relleno inicial es lo
+  // que la separa del borde izquierdo.
+  const sidePadding = Math.max(spacing.md, (width - CARD_WIDTH) / 2);
   const mapRef = useRef<MapView>(null);
   const listRef = useRef<FlatList<ExploreCampaign>>(null);
   const [query, setQuery] = useState('');
@@ -146,7 +152,7 @@ export function ExploreMap({
             showsHorizontalScrollIndicator={false}
             snapToInterval={CARD_WIDTH + CARD_GAP}
             decelerationRate="fast"
-            contentContainerStyle={styles.cards}
+            contentContainerStyle={[styles.cards, { paddingHorizontal: sidePadding }]}
             getItemLayout={(_, index) => ({
               length: CARD_WIDTH + CARD_GAP,
               offset: (CARD_WIDTH + CARD_GAP) * index,
@@ -178,6 +184,6 @@ const styles = StyleSheet.create({
   },
   locateButton: { position: 'absolute', right: spacing.md, bottom: 140 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: spacing.md },
-  cards: { paddingHorizontal: spacing.md, gap: CARD_GAP },
+  cards: { gap: CARD_GAP },
   card: { width: CARD_WIDTH },
 });
