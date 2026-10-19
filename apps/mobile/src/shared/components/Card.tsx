@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-
-import { colors, radius, spacing } from '@/shared/theme';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 type Props = {
   children: ReactNode;
@@ -9,16 +7,12 @@ type Props = {
 };
 
 export function Card({ children, style }: Props) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  return (
+    <View
+      className="w-[90%] items-center rounded-card bg-white p-6 shadow-lg shadow-black/10"
+      style={style}
+    >
+      {children}
+    </View>
+  );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    width: '90%',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    elevation: 10,
-  },
-});

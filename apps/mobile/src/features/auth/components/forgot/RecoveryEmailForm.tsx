@@ -1,9 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Card, Input } from '@/shared/components';
-import { colors, spacing } from '@/shared/theme';
+import { Button, Card, Input, Text } from '@/shared/components';
 
 import { useSendResetCode } from '../../hooks/useSendResetCode';
 
@@ -19,8 +18,11 @@ export function RecoveryEmailForm() {
 
   return (
     <Card>
-      <Text style={styles.title}>Correo de la cuenta</Text>
-      <View style={styles.fields}>
+      <Text className="mb-1 font-title text-2xl text-carbon-900">Recupera tu cuenta</Text>
+      <Text className="mb-6 text-center font-body text-[15px] text-carbon-500">
+        Escribe el correo de tu cuenta y te enviaremos un código.
+      </Text>
+      <View className="gap-4 self-stretch">
         <Input
           placeholder="Correo de recuperación"
           value={email}
@@ -33,8 +35,3 @@ export function RecoveryEmailForm() {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  title: { fontSize: 20, color: colors.primary, fontWeight: 'bold', marginBottom: spacing.lg },
-  fields: { alignSelf: 'stretch', gap: spacing.md },
-});

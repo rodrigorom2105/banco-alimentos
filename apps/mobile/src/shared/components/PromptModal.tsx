@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, StyleSheet, View } from 'react-native';
 
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { Button } from './Button';
 import { Input } from './Input';
+import { Text } from './Text';
 
 type Props = {
   visible: boolean;
@@ -93,12 +94,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     borderRadius: radius.lg,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
-  title: { fontSize: 18, fontWeight: 'bold', color: colors.text },
-  message: { fontSize: 14, color: colors.textSecondary },
+  title: { fontSize: 20, fontFamily: fonts.title, color: colors.text },
+  message: { fontSize: 14, fontFamily: fonts.body, color: colors.textSecondary },
   input: { minHeight: 90, textAlignVertical: 'top' },
-  error: { fontSize: 12, color: colors.danger },
+  error: { fontSize: 12, fontFamily: fonts.body, color: colors.danger },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },
 });

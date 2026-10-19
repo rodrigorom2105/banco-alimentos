@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Field, Input } from '@/shared/components';
+import { Field, Input, Text } from '@/shared/components';
 import { colors, spacing } from '@/shared/theme';
 
 import { ITEM_UNIT_LABELS } from '../labels';

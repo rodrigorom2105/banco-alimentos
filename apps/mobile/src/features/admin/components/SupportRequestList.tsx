@@ -5,13 +5,19 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 
-import { Button, FilterChip, Placeholder, PromptModal, StatusBadge } from '@/shared/components';
+import {
+  Button,
+  FilterChip,
+  Placeholder,
+  PromptModal,
+  StatusBadge,
+  Text,
+} from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { adminApi } from '../api/adminApi';
@@ -174,13 +180,14 @@ const styles = StyleSheet.create({
   row: {
     gap: spacing.xs,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  campaign: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  type: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  campaign: { flex: 1, fontSize: 16, fontFamily: fonts.heading, color: colors.text },
+  type: { fontSize: 13, fontFamily: fonts.heading, color: colors.primary },
   description: { fontSize: 14, color: colors.text },
   detail: { fontSize: 13, color: colors.textSecondary },
   response: { fontSize: 13, fontStyle: 'italic', color: colors.textSecondary },

@@ -1,6 +1,7 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { Text } from '@/shared/components';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { IS_DRAFT, type LegalDocument } from '../legal';
 
@@ -41,10 +42,10 @@ const styles = StyleSheet.create({
     borderColor: colors.danger,
     backgroundColor: colors.surface,
   },
-  draftTitle: { fontSize: 14, fontWeight: '700', color: colors.danger },
+  draftTitle: { fontSize: 14, fontFamily: fonts.heading, color: colors.danger },
   draftText: { fontSize: 13, color: colors.text },
   intro: { fontSize: 14, lineHeight: 21, color: colors.text },
   section: { gap: spacing.xs },
-  heading: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  heading: { fontSize: 15, fontFamily: fonts.heading, color: colors.primary },
   body: { fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 });

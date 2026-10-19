@@ -1,17 +1,9 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 
-import { Button, Placeholder, StatusBadge } from '@/shared/components';
-import { colors, radius, spacing } from '@/shared/theme';
+import { Button, Placeholder, StatusBadge, Text } from '@/shared/components';
+import { colors } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { useMyDonations } from '../hooks/useMyDonations';
@@ -26,16 +18,18 @@ function DonationRow({ donation }: { donation: MyDonationRequest }) {
     <Pressable
       onPress={() => router.push({ pathname: '/donation/[id]', params: { id: donation.id } })}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      className="gap-2 rounded-card border border-line bg-white p-4 active:bg-carbon-50"
     >
-      <View style={styles.rowHeader}>
-        <Text style={styles.date}>{formatDayMonth(donation.preferred_date)}</Text>
+      <View className="flex-row items-center gap-2">
+        <Text className="flex-1 font-heading text-base text-carbon-900">
+          {formatDayMonth(donation.preferred_date)}
+        </Text>
         <StatusBadge label={status.label} tone={status.tone} />
       </View>
-      <Text style={styles.detail} numberOfLines={1}>
+      <Text className="font-body text-[13px] text-carbon-500" numberOfLines={1}>
         {donation.address}
       </Text>
-      <Text style={styles.detail}>
+      <Text className="font-body text-[13px] text-carbon-500">
         {products} {products === 1 ? 'producto' : 'productos'}
         {donation.preferred_campaign ? ` · ${donation.preferred_campaign.name}` : ''}
       </Text>
@@ -44,7 +38,7 @@ function DonationRow({ donation }: { donation: MyDonationRequest }) {
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return <Text style={styles.sectionTitle}>{children}</Text>;
+  return <Text className="mt-2 font-heading text-lg text-carbon-900">{children}</Text>;
 }
 
 export function MyDonationList() {
@@ -67,7 +61,14 @@ export function MyDonationList() {
     setIsRefreshing(false);
   };
 
-  if (isLoading) return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={{ flex: 1, backgroundColor: colors.background }}
+        color={colors.primary}
+      />
+    );
+  }
 
   // `rows` mezcla encabezados y solicitudes en una sola lista para que el scroll sea uno.
   const rows: ({ kind: 'title'; text: string } | { kind: 'item'; donation: MyDonationRequest })[] =
@@ -91,8 +92,8 @@ export function MyDonationList() {
           <DonationRow donation={row.donation} />
         )
       }
-      style={styles.screen}
-      contentContainerStyle={styles.content}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={refresh} colors={[colors.primary]} />
       }
@@ -110,26 +111,3 @@ export function MyDonationList() {
 }
 
 const toItem = (donation: MyDonationRequest) => ({ kind: 'item' as const, donation });
-
-const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: colors.background },
-  screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.sm, flexGrow: 1 },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginTop: spacing.sm,
-  },
-  row: {
-    gap: spacing.xs,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pressed: { opacity: 0.7 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  date: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  detail: { fontSize: 13, color: colors.textSecondary },
-});

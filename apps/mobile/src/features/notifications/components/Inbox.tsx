@@ -1,18 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 
-import { Placeholder } from '@/shared/components';
-import { colors, radius, spacing } from '@/shared/theme';
+import { Placeholder, Text } from '@/shared/components';
+import { colors } from '@/shared/theme';
 
 import { notificationsApi } from '../api/notificationsApi';
 import { useNotifications } from '../hooks/useNotifications';
@@ -32,23 +24,40 @@ function NotificationRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.row, isUnread && styles.unreadRow, pressed && styles.pressed]}
+      className={`flex-row items-start gap-3 rounded-card border bg-white p-4 active:bg-carbon-50 ${
+        isUnread ? 'border-brand-500' : 'border-line'
+      }`}
     >
-      <MaterialCommunityIcons
-        name={NOTIFICATION_ICONS[notification.type]}
-        size={22}
-        color={isUnread ? colors.primary : colors.textSecondary}
-      />
-      <View style={styles.rowBody}>
-        <View style={styles.rowHeader}>
-          <Text style={[styles.title, isUnread && styles.titleUnread]} numberOfLines={1}>
+      <View
+        className={`h-11 w-11 items-center justify-center rounded-full ${
+          isUnread ? 'bg-brand-50' : 'bg-carbon-50'
+        }`}
+      >
+        <MaterialCommunityIcons
+          name={NOTIFICATION_ICONS[notification.type]}
+          size={22}
+          color={isUnread ? colors.primary : colors.textSecondary}
+        />
+      </View>
+      <View className="flex-1 gap-1">
+        <View className="flex-row items-center gap-2">
+          <Text
+            className={`flex-1 text-[15px] text-carbon-900 ${
+              isUnread ? 'font-heading' : 'font-body-medium'
+            }`}
+            numberOfLines={1}
+          >
             {notification.title}
           </Text>
-          <Text style={styles.time}>{formatRelative(notification.created_at)}</Text>
+          <Text className="font-body text-xs text-carbon-500">
+            {formatRelative(notification.created_at)}
+          </Text>
         </View>
-        <Text style={styles.body}>{notification.body}</Text>
+        <Text className="font-body text-[13px] leading-[18px] text-carbon-500">
+          {notification.body}
+        </Text>
       </View>
-      {isUnread && <View style={styles.dot} />}
+      {isUnread && <View className="mt-1.5 h-2.5 w-2.5 rounded-full bg-brand-500" />}
     </Pressable>
   );
 }
@@ -79,7 +88,14 @@ export function Inbox() {
     await reload();
   };
 
-  if (isLoading) return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={{ flex: 1, backgroundColor: colors.background }}
+        color={colors.primary}
+      />
+    );
+  }
 
   if (error) {
     return <Placeholder title="No se pudieron cargar tus avisos" message={error} />;
@@ -92,15 +108,17 @@ export function Inbox() {
       data={notifications}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <NotificationRow notification={item} onPress={() => open(item)} />}
-      style={styles.screen}
-      contentContainerStyle={styles.content}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={refresh} colors={[colors.primary]} />
       }
       ListHeaderComponent={
         hasUnread ? (
           <Pressable onPress={markAll} accessibilityRole="button" hitSlop={8}>
-            <Text style={styles.markAll}>Marcar todas como leídas</Text>
+            <Text className="self-end py-1 font-heading text-[13px] text-brand-500">
+              Marcar todas como leídas
+            </Text>
           </Pressable>
         ) : null
       }
@@ -113,35 +131,3 @@ export function Inbox() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: colors.background },
-  screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.sm, flexGrow: 1 },
-  markAll: {
-    alignSelf: 'flex-end',
-    paddingVertical: spacing.xs,
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  unreadRow: { backgroundColor: colors.surface, borderColor: colors.primary },
-  pressed: { opacity: 0.7 },
-  rowBody: { flex: 1, gap: 2 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  title: { flex: 1, fontSize: 15, color: colors.text },
-  titleUnread: { fontWeight: '700' },
-  time: { fontSize: 12, color: colors.textSecondary },
-  body: { fontSize: 13, color: colors.textSecondary },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 6 },
-});

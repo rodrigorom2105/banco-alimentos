@@ -1,3 +1,7 @@
+import '../../global.css';
+
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Nunito_700Bold, Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 
@@ -64,7 +68,16 @@ function RootNavigator() {
     router.push(href);
   }, [isSignedIn, pendingRedirect, setPendingRedirect]);
 
-  if (isLoading) return null;
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+
+  // Si una fuente falla se sigue con la del sistema: no vale la pena bloquear la app.
+  if (isLoading || (!fontsLoaded && !fontError)) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

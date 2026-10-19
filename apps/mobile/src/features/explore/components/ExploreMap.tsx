@@ -4,14 +4,15 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
+  useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 
-import { colors, radius, shadows, spacing } from '@/shared/theme';
+import { Text } from '@/shared/components';
+import { colors, shadows, spacing } from '@/shared/theme';
 import type { Coordinates } from '@/shared/utils';
 
 import { matchesQuery } from '../filters';
@@ -53,6 +54,11 @@ export function ExploreMap({
   onOpenCampaign,
   topInset = spacing.md,
 }: ExploreMapProps) {
+  const { width } = useWindowDimensions();
+  // Margen a los lados para que la tarjeta ajustada (snap) quede centrada: con
+  // snapToInterval cada tarjeta se detiene en su desplazamiento, y el relleno inicial es lo
+  // que la separa del borde izquierdo.
+  const sidePadding = Math.max(spacing.md, (width - CARD_WIDTH) / 2);
   const mapRef = useRef<MapView>(null);
   const listRef = useRef<FlatList<ExploreCampaign>>(null);
   const [query, setQuery] = useState('');
@@ -112,7 +118,7 @@ export function ExploreMap({
             key={campaign.id}
             coordinate={campaign}
             title={campaign.name}
-            pinColor={campaign.id === selectedId ? colors.danger : colors.primary}
+            pinColor={campaign.id === selectedId ? colors.accent : colors.primary}
             onPress={() => handleMarkerPress(campaign)}
           />
         ))}
@@ -123,6 +129,7 @@ export function ExploreMap({
       <Pressable
         onPress={handleLocate}
         style={styles.locateButton}
+        className="h-12 w-12 items-center justify-center rounded-full bg-white shadow-md shadow-black/20 active:bg-carbon-50"
         accessibilityRole="button"
         accessibilityLabel="Centrar en mi ubicación"
       >
@@ -131,8 +138,10 @@ export function ExploreMap({
 
       <View style={styles.bottom}>
         {visible.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No hay campañas que coincidan con tu búsqueda.</Text>
+          <View className="mx-4 rounded-card bg-white p-4 shadow-md shadow-black/10">
+            <Text className="text-center font-body text-carbon-500">
+              No hay campañas que coincidan con tu búsqueda.
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -143,7 +152,7 @@ export function ExploreMap({
             showsHorizontalScrollIndicator={false}
             snapToInterval={CARD_WIDTH + CARD_GAP}
             decelerationRate="fast"
-            contentContainerStyle={styles.cards}
+            contentContainerStyle={[styles.cards, { paddingHorizontal: sidePadding }]}
             getItemLayout={(_, index) => ({
               length: CARD_WIDTH + CARD_GAP,
               offset: (CARD_WIDTH + CARD_GAP) * index,
@@ -173,26 +182,8 @@ const styles = StyleSheet.create({
     right: spacing.md,
     ...shadows.floating,
   },
-  locateButton: {
-    position: 'absolute',
-    right: spacing.md,
-    bottom: 140,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 22,
-    backgroundColor: colors.background,
-    elevation: 4,
-  },
+  locateButton: { position: 'absolute', right: spacing.md, bottom: 140 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: spacing.md },
-  cards: { paddingHorizontal: spacing.md, gap: CARD_GAP },
+  cards: { gap: CARD_GAP },
   card: { width: CARD_WIDTH },
-  empty: {
-    marginHorizontal: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.background,
-  },
-  emptyText: { color: colors.textSecondary, textAlign: 'center' },
 });

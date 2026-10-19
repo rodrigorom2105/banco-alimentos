@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { Text } from '@/shared/components';
+import { colors } from '@/shared/theme';
 
 export type ExploreView = 'map' | 'list';
 
@@ -25,45 +26,33 @@ type Props = {
 // Selector de ancho completo entre la vista de mapa y la de lista.
 export function ViewToggle({ value, onChange, style }: Props) {
   return (
-    <View style={[styles.container, style]} accessibilityRole="tablist">
+    <View
+      className="flex-row rounded-full border border-line bg-white p-1"
+      style={[{ height: VIEW_TOGGLE_HEIGHT }, style]}
+      accessibilityRole="tablist"
+    >
       {OPTIONS.map((option) => {
         const selected = option.value === value;
-        const color = selected ? colors.background : colors.textSecondary;
+        const color = selected ? '#FFFFFF' : colors.textSecondary;
         return (
           <Pressable
             key={option.value}
             onPress={() => onChange(option.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            style={[styles.option, selected && styles.selected]}
+            className={`flex-1 flex-row items-center justify-center gap-2 rounded-full ${
+              selected ? 'bg-brand-500' : ''
+            }`}
           >
             <MaterialCommunityIcons name={option.icon} size={18} color={color} />
-            <Text style={[styles.label, { color }]}>{option.label}</Text>
+            <Text
+              className={`font-heading text-[15px] ${selected ? 'text-white' : 'text-carbon-500'}`}
+            >
+              {option.label}
+            </Text>
           </Pressable>
         );
       })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: VIEW_TOGGLE_HEIGHT,
-    flexDirection: 'row',
-    padding: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  option: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  selected: { backgroundColor: colors.primary },
-  label: { fontSize: 15, fontWeight: '600' },
-});

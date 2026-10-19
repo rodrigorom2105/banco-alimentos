@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors, spacing } from '@/shared/theme';
 
 import type { ExploreMapProps } from './ExploreMap';

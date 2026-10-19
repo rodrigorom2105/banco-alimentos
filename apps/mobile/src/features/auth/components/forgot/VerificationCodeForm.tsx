@@ -1,9 +1,8 @@
 import { Image } from 'expo-image';
 import { useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 
-import { Button, Card } from '@/shared/components';
-import { colors, spacing } from '@/shared/theme';
+import { Button, Card, Text } from '@/shared/components';
 
 import { useSendResetCode } from '../../hooks/useSendResetCode';
 import { RESET_CODE_LENGTH, useVerifyResetCode } from '../../hooks/useVerifyResetCode';
@@ -47,18 +46,22 @@ export function VerificationCodeForm({ email }: { email: string }) {
     <Card>
       <Image
         source={require('@/assets/images/auth/verification.png')}
-        style={styles.image}
+        style={{ width: '100%', aspectRatio: 352 / 300, borderRadius: 30 }}
         contentFit="contain"
       />
-      <Text style={styles.title}>Ingresa el código que se te envió por correo</Text>
-      <View style={styles.digits}>
+      <Text className="mb-6 mt-4 text-center font-title text-xl text-carbon-900">
+        Ingresa el código que se te envió por correo
+      </Text>
+      <View className="mb-5 flex-row gap-2">
         {digits.map((digit, index) => (
           <TextInput
             key={index}
             ref={(el) => {
               inputRefs.current[index] = el;
             }}
-            style={styles.digit}
+            className={`h-14 w-11 rounded-button border bg-white text-center font-heading text-2xl text-carbon-900 focus:border-brand-500 ${
+              digit ? 'border-brand-500' : 'border-line'
+            }`}
             value={digit}
             onChangeText={(text) => onChangeDigit(text, index)}
             onKeyPress={({ nativeEvent }) => onKeyPress(nativeEvent.key, index)}
@@ -69,35 +72,15 @@ export function VerificationCodeForm({ email }: { email: string }) {
           />
         ))}
       </View>
-      <View style={styles.actions}>
+      <View className="gap-4 self-stretch">
         <Button title="Verificar" onPress={() => verify(digits.join(''))} loading={isLoading} />
-        <Text style={styles.resend} onPress={isResending ? undefined : onResend}>
+        <Text
+          className="text-center font-heading text-brand-500"
+          onPress={isResending ? undefined : onResend}
+        >
           {isResending ? 'Enviando…' : 'Volver a enviar código'}
         </Text>
       </View>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  image: { width: '100%', aspectRatio: 352 / 300, borderRadius: 30 },
-  title: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  digits: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  digit: {
-    width: 40,
-    height: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    textAlign: 'center',
-    fontSize: 22,
-    color: colors.text,
-  },
-  actions: { alignSelf: 'stretch', gap: spacing.md },
-  resend: { color: colors.primary, fontWeight: 'bold', textAlign: 'center' },
-});

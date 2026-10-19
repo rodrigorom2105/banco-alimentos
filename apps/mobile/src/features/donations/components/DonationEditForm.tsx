@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Button, FormScreen } from '@/shared/components';
+import { Button, FormScreen, Text } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, radius, spacing } from '@/shared/theme';
 

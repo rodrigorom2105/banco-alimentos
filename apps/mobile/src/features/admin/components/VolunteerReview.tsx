@@ -1,12 +1,12 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { WEEKDAY_LABELS } from '@/features/volunteers';
-import { Button, PromptModal, StatusBadge } from '@/shared/components';
+import { Button, PromptModal, StatusBadge, Text } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { adminApi } from '../api/adminApi';
@@ -174,19 +174,20 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, gap: spacing.md },
   header: { gap: spacing.sm, alignItems: 'flex-start' },
-  name: { fontSize: 22, fontWeight: 'bold', color: colors.text },
+  name: { fontSize: 22, fontFamily: fonts.title, color: colors.text },
   card: {
     gap: spacing.md,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   row: { gap: 2 },
   label: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
   value: { fontSize: 15, color: colors.text },
   section: { gap: spacing.sm },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+  sectionTitle: { fontSize: 16, fontFamily: fonts.heading, color: colors.text },
   sectionHint: { fontSize: 13, color: colors.textSecondary },
   notice: {
     gap: spacing.xs,
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerTint,
   },
   noticeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  noticeTitle: { fontSize: 13, fontWeight: '700', color: colors.danger },
+  noticeTitle: { fontSize: 13, fontFamily: fonts.heading, color: colors.danger },
   noticeText: { flex: 1, fontSize: 13, color: colors.text },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },

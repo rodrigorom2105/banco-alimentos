@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { Text } from './Text';
 
 type Props = {
   label: string;
@@ -16,24 +16,15 @@ export function FilterChip({ label, selected, onPress, disabled }: Props) {
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
-      style={[styles.chip, selected && styles.selected, disabled && styles.disabled]}
+      className={`rounded-full border px-4 py-2 ${
+        selected ? 'border-brand-500 bg-brand-500' : 'border-line bg-white active:bg-carbon-50'
+      } ${disabled ? 'opacity-40' : ''}`}
     >
-      <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
+      <Text
+        className={`text-[13px] ${selected ? 'font-body-bold text-white' : 'font-body text-carbon-500'}`}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  selected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  disabled: { opacity: 0.4 },
-  label: { fontSize: 13, color: colors.text },
-  selectedLabel: { color: colors.background, fontWeight: '600' },
-});

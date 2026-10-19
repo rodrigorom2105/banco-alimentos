@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -6,14 +7,12 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
-  Text,
   View,
 } from 'react-native';
 
 import { useAuth } from '@/providers';
-import { Button, FilterChip, StatusBadge } from '@/shared/components';
-import { colors, radius, spacing } from '@/shared/theme';
+import { Button, FilterChip, StatusBadge, Text } from '@/shared/components';
+import { colors } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { statusFiltersFor, type StatusFilter } from '../filters';
@@ -26,20 +25,22 @@ function CampaignRow({ campaign }: { campaign: ManagedCampaign }) {
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/my-campaigns/[id]', params: { id: campaign.id } })}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      className="gap-2 rounded-card border border-line bg-white p-4 active:bg-carbon-50"
       accessibilityRole="button"
     >
-      <View style={styles.rowHeader}>
-        <Text style={styles.rowName} numberOfLines={1}>
+      <View className="flex-row items-center gap-2">
+        <Text className="flex-1 font-heading text-base text-carbon-900" numberOfLines={1}>
           {campaign.name}
         </Text>
         <StatusBadge label={status.label} tone={status.tone} />
       </View>
-      <Text style={styles.rowDetail} numberOfLines={1}>
+      <Text className="font-body text-[13px] text-carbon-500" numberOfLines={1}>
         {[campaign.address, campaign.municipality?.name].filter(Boolean).join(', ')}
       </Text>
       {campaign.end_date && (
-        <Text style={styles.rowDetail}>Hasta {formatDayMonth(campaign.end_date)}</Text>
+        <Text className="font-body text-[13px] text-carbon-500">
+          Hasta {formatDayMonth(campaign.end_date)}
+        </Text>
       )}
     </Pressable>
   );
@@ -71,26 +72,33 @@ export function ManagedCampaignList({ isAdmin }: { isAdmin: boolean }) {
     setIsRefreshing(false);
   };
 
-  if (isLoading) return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={{ flex: 1, backgroundColor: colors.background }}
+        color={colors.primary}
+      />
+    );
+  }
 
   return (
     <FlatList
       data={visible}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <CampaignRow campaign={item} />}
-      style={styles.screen}
-      contentContainerStyle={styles.content}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: colors.background }}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={refresh} colors={[colors.primary]} />
       }
       ListHeaderComponent={
-        <View style={styles.header}>
+        <View className="mb-2 gap-4">
           <Button title="+ Registrar campaña" onPress={() => router.push('/my-campaigns/new')} />
           {filters.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chips}
+              contentContainerStyle={{ gap: 8 }}
             >
               {filters.map((status) => (
                 <FilterChip
@@ -105,37 +113,19 @@ export function ManagedCampaignList({ isAdmin }: { isAdmin: boolean }) {
         </View>
       }
       ListEmptyComponent={
-        <Text style={styles.empty}>
-          {error
-            ? `No se pudieron cargar las campañas: ${error}`
-            : activeFilter
-              ? 'No hay campañas con este estado.'
-              : isAdmin
-                ? 'Todavía no hay campañas registradas.'
-                : 'Aún no has registrado ninguna campaña.'}
-        </Text>
+        <View className="items-center gap-3 py-12">
+          <MaterialCommunityIcons name="bullhorn-outline" size={48} color={colors.textSecondary} />
+          <Text className="px-8 text-center font-body text-base text-carbon-500">
+            {error
+              ? `No se pudieron cargar las campañas: ${error}`
+              : activeFilter
+                ? 'No hay campañas con este estado.'
+                : isAdmin
+                  ? 'Todavía no hay campañas registradas.'
+                  : 'Aún no has registrado ninguna campaña.'}
+          </Text>
+        </View>
       }
     />
   );
 }
-
-const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: colors.background },
-  screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.sm, backgroundColor: colors.background },
-  header: { gap: spacing.md, marginBottom: spacing.sm },
-  chips: { gap: spacing.sm },
-  row: {
-    gap: spacing.xs,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  pressed: { opacity: 0.7 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  rowName: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  rowDetail: { fontSize: 13, color: colors.textSecondary },
-  empty: { paddingVertical: spacing.xl, color: colors.textSecondary, textAlign: 'center' },
-});

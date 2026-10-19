@@ -1,9 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 import { Button } from './Button';
+import { Text } from './Text';
 
 type Props = {
   title: string;
@@ -16,27 +17,15 @@ type Props = {
 // Alert no muestra nada en web.
 export function SuccessState({ title, message, actionLabel, onAction }: Props) {
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name="check-circle-outline" size={64} color={colors.primary} />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
-      <View style={styles.action}>
+    <View className="flex-1 items-center justify-center gap-4 bg-cream p-8">
+      <View className="h-28 w-28 items-center justify-center rounded-full bg-leaf-50">
+        <MaterialCommunityIcons name="check-circle" size={64} color={colors.success} />
+      </View>
+      <Text className="text-center font-title text-2xl text-carbon-900">{title}</Text>
+      <Text className="text-center font-body text-[15px] leading-6 text-carbon-500">{message}</Text>
+      <View className="mt-4 self-stretch">
         <Button title={actionLabel} onPress={onAction} />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    padding: spacing.xl,
-    backgroundColor: colors.background,
-  },
-  title: { fontSize: 22, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
-  message: { fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
-  action: { alignSelf: 'stretch', marginTop: spacing.md },
-});

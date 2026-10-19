@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Card, Input } from '@/shared/components';
-import { colors, spacing } from '@/shared/theme';
+import { Button, Card, Input, Text } from '@/shared/components';
 
 import { useResetPassword } from '../../hooks/useResetPassword';
 
@@ -13,8 +12,11 @@ export function NewPasswordForm() {
 
   return (
     <Card>
-      <Text style={styles.title}>Restablecer contraseña</Text>
-      <View style={styles.fields}>
+      <Text className="mb-1 font-title text-2xl text-carbon-900">Nueva contraseña</Text>
+      <Text className="mb-6 text-center font-body text-[15px] text-carbon-500">
+        Elige una contraseña nueva para tu cuenta.
+      </Text>
+      <View className="gap-4 self-stretch">
         <Input
           placeholder="Nueva contraseña"
           value={newPassword}
@@ -36,8 +38,3 @@ export function NewPasswordForm() {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  title: { fontSize: 20, color: colors.primary, fontWeight: 'bold', marginBottom: spacing.lg },
-  fields: { alignSelf: 'stretch', gap: spacing.md },
-});

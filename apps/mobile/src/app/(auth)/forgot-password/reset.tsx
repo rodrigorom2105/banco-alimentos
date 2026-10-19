@@ -9,7 +9,7 @@ export default function ResetPasswordScreen() {
   if (!session || !isRecoveringPassword) return <Redirect href="/forgot-password" />;
 
   return (
-    <AuthScreen>
+    <AuthScreen showBack={false}>
       <NewPasswordForm />
     </AuthScreen>
   );

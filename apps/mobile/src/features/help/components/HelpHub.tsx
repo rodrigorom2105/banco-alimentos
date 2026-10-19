@@ -1,13 +1,22 @@
 import { type Href } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { useHelpContext, type HelpContext } from '@/features/profile';
 import { useRequireAuth } from '@/shared/hooks';
-import { colors, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
-import { HelpOption, type HelpIcon } from './HelpOption';
+import { HelpOption, type HelpIcon, type HelpTone } from './HelpOption';
 
 type Option = { key: string; icon: HelpIcon; title: string; description: string; href: Href };
+
+// Color del ícono de cada opción; las que no estén aquí usan el rojo de marca.
+const TONE_BY_KEY: Record<string, HelpTone> = {
+  'new-campaign': 'accent',
+  'my-campaigns': 'carbon',
+  'volunteer-dashboard': 'leaf',
+  'volunteer-apply': 'leaf',
+};
 
 const VOLUNTEER_DESCRIPTION: Record<string, string> = {
   pending: 'Tu solicitud está en revisión por BAMX',
@@ -112,32 +121,41 @@ export function HelpHub() {
   const { context, isSignedIn, isLoading, error } = useHelpContext();
   const requireAuth = useRequireAuth();
 
-  if (isLoading) return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={{ flex: 1, backgroundColor: colors.background }}
+        color={colors.primary}
+      />
+    );
+  }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.subtitle}>Elige cómo quieres apoyar al Banco de Alimentos.</Text>
+    <ScrollView
+      // El fondo va en el ScrollView (no solo en su contenido) para cubrir toda la pantalla.
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+    >
+      <Text className="font-body text-sm text-carbon-500">
+        Elige cómo quieres apoyar al Banco de Alimentos.
+      </Text>
       {optionsFor(context, isSignedIn).map((option) => (
         <HelpOption
           key={option.key}
           icon={option.icon}
           title={option.title}
           description={option.description}
+          tone={TONE_BY_KEY[option.key]}
           // Todas estas pantallas exigen sesión: sin ella se manda a iniciar sesión y al
           // volver se abre la que se quería.
           onPress={() => requireAuth(option.href)}
         />
       ))}
-      {error && <Text style={styles.error}>No se pudo cargar tu información: {error}</Text>}
+      {error && (
+        <Text className="font-body text-xs text-brand-600">
+          No se pudo cargar tu información: {error}
+        </Text>
+      )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  // El fondo va en el ScrollView (no solo en su contenido) para cubrir toda la pantalla.
-  screen: { flex: 1, backgroundColor: colors.background },
-  loading: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.md, backgroundColor: colors.background },
-  subtitle: { fontSize: 14, color: colors.textSecondary },
-  error: { fontSize: 12, color: colors.danger },
-});

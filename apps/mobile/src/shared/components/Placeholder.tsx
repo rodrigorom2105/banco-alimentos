@@ -1,28 +1,19 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { colors, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
+
+import { Text } from './Text';
 
 // Pantalla informativa para rutas sin contenido todavía o sin permiso.
 export function Placeholder({ title, message }: { title: string; message: string }) {
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name="information-outline" size={48} color={colors.textSecondary} />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+    <View className="flex-1 items-center justify-center gap-3 bg-cream p-8">
+      <View className="h-24 w-24 items-center justify-center rounded-full bg-accent-50">
+        <MaterialCommunityIcons name="information-outline" size={44} color={colors.accent} />
+      </View>
+      <Text className="text-center font-heading text-lg text-carbon-900">{title}</Text>
+      <Text className="text-center font-body text-sm leading-5 text-carbon-500">{message}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.xl,
-    backgroundColor: colors.background,
-  },
-  title: { fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  message: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
-});

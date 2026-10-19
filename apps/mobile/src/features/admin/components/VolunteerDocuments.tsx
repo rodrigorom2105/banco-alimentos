@@ -1,10 +1,11 @@
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { adminApi } from '../api/adminApi';
 
@@ -92,6 +93,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pressed: { opacity: 0.6 },
-  proofText: { color: colors.primary, fontWeight: '600' },
+  proofText: { color: colors.primary, fontFamily: fonts.heading },
   error: { fontSize: 12, color: colors.danger },
 });

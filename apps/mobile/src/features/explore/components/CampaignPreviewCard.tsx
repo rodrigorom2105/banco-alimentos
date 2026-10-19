@@ -1,6 +1,8 @@
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { Text } from '@/shared/components';
+import { colors } from '@/shared/theme';
 import { formatDayMonth, formatDistance } from '@/shared/utils';
 
 import type { ExploreCampaign } from '../types';
@@ -17,42 +19,32 @@ export function CampaignPreviewCard({ campaign, onPress, selected, style }: Prop
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.card,
-        selected && styles.selected,
-        pressed && styles.pressed,
-        style,
-      ]}
+      style={style}
+      className={`gap-3 rounded-card bg-white p-4 shadow-md shadow-black/10 active:bg-carbon-50 ${
+        selected ? 'border-2 border-brand-500' : 'border border-line'
+      }`}
     >
-      <Text style={styles.name} numberOfLines={2}>
+      <Text className="font-heading text-base text-carbon-900" numberOfLines={2}>
         {campaign.name}
       </Text>
-      <View style={styles.meta}>
+      <View className="flex-row items-center justify-between gap-2">
         {campaign.distanceKm !== null && (
-          <Text style={styles.distance}>{formatDistance(campaign.distanceKm)}</Text>
+          <View className="flex-row items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1">
+            <MaterialCommunityIcons name="map-marker" size={14} color={colors.primary} />
+            <Text className="font-body-bold text-xs text-brand-500">
+              {formatDistance(campaign.distanceKm)}
+            </Text>
+          </View>
         )}
-        <Text style={styles.detail}>
-          {campaign.end_date ? `Hasta ${formatDayMonth(campaign.end_date)}` : 'Sin fecha de cierre'}
-        </Text>
+        <View className="flex-row items-center gap-1">
+          <MaterialCommunityIcons name="calendar-outline" size={14} color={colors.textSecondary} />
+          <Text className="font-body text-xs text-carbon-500">
+            {campaign.end_date
+              ? `Hasta ${formatDayMonth(campaign.end_date)}`
+              : 'Sin fecha de cierre'}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: spacing.xs,
-    padding: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    elevation: 3,
-  },
-  selected: { borderColor: colors.primary, borderWidth: 2 },
-  pressed: { opacity: 0.7 },
-  name: { fontSize: 16, fontWeight: '600', color: colors.text },
-  meta: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
-  distance: { fontSize: 13, fontWeight: '600', color: colors.primary },
-  detail: { fontSize: 13, color: colors.textSecondary },
-});
