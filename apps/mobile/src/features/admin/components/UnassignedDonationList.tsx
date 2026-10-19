@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } f
 
 import { Button, Placeholder, StatusBadge } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { adminApi } from '../api/adminApi';
@@ -131,12 +131,13 @@ const styles = StyleSheet.create({
   row: {
     gap: spacing.xs,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  date: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
+  date: { flex: 1, fontSize: 16, fontFamily: fonts.heading, color: colors.text },
   detail: { fontSize: 13, color: colors.textSecondary },
   stale: { fontSize: 13, color: colors.text, marginTop: spacing.xs },
   message: { fontSize: 13, color: colors.primary },

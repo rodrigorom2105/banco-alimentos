@@ -13,7 +13,7 @@ import {
 
 import { FilterChip, Placeholder, StatusBadge } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 
 import { useVolunteersForReview } from '../hooks/useAdminQueries';
@@ -117,12 +117,13 @@ const styles = StyleSheet.create({
   row: {
     gap: spacing.xs,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   pressed: { opacity: 0.7 },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  name: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
+  name: { flex: 1, fontSize: 16, fontFamily: fonts.heading, color: colors.text },
   detail: { fontSize: 13, color: colors.textSecondary },
 });
