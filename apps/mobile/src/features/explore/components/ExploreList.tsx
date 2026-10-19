@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, useState, type ReactNode } from 'react';
 import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -30,8 +31,8 @@ type Props = {
 
 function FilterRow({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View style={styles.filterRow}>
-      <Text style={styles.filterTitle}>{title}</Text>
+    <View className="gap-2">
+      <Text className="font-heading text-xs uppercase tracking-wide text-carbon-500">{title}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -77,7 +78,7 @@ export function ExploreList({
   );
 
   const header = (
-    <View style={styles.header}>
+    <View className="mb-2 gap-4">
       <SearchBar
         value={filters.query}
         onChangeText={(query) => update({ query })}
@@ -127,11 +128,11 @@ export function ExploreList({
         </FilterRow>
       )}
       {!hasLocation && (
-        <Text style={styles.hint}>
+        <Text className="font-body text-xs text-carbon-500">
           Activa tu ubicación para ver distancias y ordenar por cercanía.
         </Text>
       )}
-      <Text style={styles.count}>
+      <Text className="font-body-medium text-[13px] text-carbon-500">
         {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
       </Text>
     </View>
@@ -151,11 +152,18 @@ export function ExploreList({
         <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.primary]} />
       }
       ListEmptyComponent={
-        <Text style={styles.empty}>
-          {error
-            ? `No se pudieron cargar las campañas: ${error}`
-            : 'No hay campañas que coincidan con los filtros.'}
-        </Text>
+        <View className="items-center gap-3 py-12">
+          <MaterialCommunityIcons
+            name="map-search-outline"
+            size={48}
+            color={colors.textSecondary}
+          />
+          <Text className="px-8 text-center font-body text-base text-carbon-500">
+            {error
+              ? `No se pudieron cargar las campañas: ${error}`
+              : 'No hay campañas que coincidan con los filtros.'}
+          </Text>
+        </View>
       }
     />
   );
@@ -163,11 +171,5 @@ export function ExploreList({
 
 const styles = StyleSheet.create({
   content: { padding: spacing.md, gap: spacing.sm },
-  header: { gap: spacing.md, marginBottom: spacing.sm },
-  filterRow: { gap: spacing.xs },
-  filterTitle: { fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase' },
   chips: { gap: spacing.sm },
-  hint: { fontSize: 12, color: colors.textSecondary },
-  count: { fontSize: 13, color: colors.textSecondary },
-  empty: { paddingVertical: spacing.xl, color: colors.textSecondary, textAlign: 'center' },
 });

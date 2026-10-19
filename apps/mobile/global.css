@@ -34,6 +34,7 @@
 
   /* Fondos */
   --color-cream: #fffbf5;
+  --color-line: #e6e1da;
 
   --font-title: Nunito_800ExtraBold;
   --font-heading: Nunito_700Bold;
@@ -41,7 +42,7 @@
   --font-body-medium: Inter_500Medium;
   --font-body-bold: Inter_600SemiBold;
 
-  --radius-card: 20px;
+  --radius-card: 24px;
   --radius-button: 16px;
   --radius-pill: 999px;
 }

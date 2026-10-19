@@ -1,14 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 type Props = {
   value: string;
@@ -24,14 +17,17 @@ export function SearchBar({
   style,
 }: Props) {
   return (
-    <View style={[styles.container, style]}>
+    <View
+      className="flex-row items-center gap-2 rounded-full border border-line bg-white px-4"
+      style={style}
+    >
       <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={colors.textSecondary}
-        style={styles.input}
+        className="flex-1 py-3 font-body text-[15px] text-carbon-500"
         returnKeyType="search"
         accessibilityLabel={placeholder}
       />
@@ -47,17 +43,3 @@ export function SearchBar({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  input: { flex: 1, paddingVertical: spacing.sm + 2, fontSize: 15, color: colors.text },
-});

@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
 
-import { colors } from '@/shared/theme';
+import { colors, fonts } from '@/shared/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 type TabIconProps = { focused: boolean; color: ColorValue; size: number };
@@ -27,6 +27,8 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+        tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: colors.border },
         // Oculta la barra de pestañas mientras el teclado está abierto (Android la subía).
         tabBarHideOnKeyboard: true,
       }}

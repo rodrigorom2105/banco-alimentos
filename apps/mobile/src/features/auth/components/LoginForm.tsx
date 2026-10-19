@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button, Card, Input } from '@/shared/components';
-import { colors, spacing } from '@/shared/theme';
+import { colors, fonts } from '@/shared/theme';
 
 import { useLogin } from '../hooks/useLogin';
 
@@ -16,11 +16,15 @@ export function LoginForm() {
   return (
     <Card>
       <Image
-        source={require('@/assets/images/auth/enter.png')}
-        style={styles.image}
+        source={require('@/assets/images/BAMXlogo.png')}
+        style={{ width: '60%', aspectRatio: 674 / 455 }}
         contentFit="contain"
       />
-      <View style={styles.fields}>
+      <Text className="mb-1 mt-4 font-title text-2xl text-carbon-900">Bienvenido</Text>
+      <Text className="mb-6 text-center font-body text-base text-carbon-500">
+        Inicia sesión para donar y ayudar en tu zona
+      </Text>
+      <View className="gap-4 self-stretch">
         <Input
           placeholder="Correo electrónico"
           value={email}
@@ -38,31 +42,14 @@ export function LoginForm() {
         />
         <Button title="Ingresar" onPress={() => login({ email, password })} loading={isLoading} />
       </View>
-      <View style={styles.footer}>
-        <Link href="/forgot-password" style={styles.footerText}>
+      <View className="mt-5 flex-row justify-between self-stretch">
+        <Link href="/forgot-password" style={{ color: colors.primary, fontFamily: fonts.heading }}>
           ¿Olvidó su contraseña?
         </Link>
-        <Link href="/register" style={styles.footerText}>
+        <Link href="/register" style={{ color: colors.primary, fontFamily: fonts.heading }}>
           Registro
         </Link>
       </View>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  image: {
-    width: '100%',
-    aspectRatio: 350 / 300,
-    borderRadius: 50,
-    marginBottom: spacing.lg,
-  },
-  fields: { alignSelf: 'stretch', gap: spacing.md },
-  footer: {
-    marginTop: spacing.md,
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  footerText: { color: colors.primary, fontWeight: 'bold' },
-});

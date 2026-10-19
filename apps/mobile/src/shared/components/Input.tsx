@@ -1,6 +1,6 @@
-import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
+import { TextInput, type TextInputProps } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 type Props = TextInputProps & { variant?: 'outline' | 'filled' };
 
@@ -9,19 +9,9 @@ export function Input({ variant = 'outline', ...props }: Props) {
     <TextInput
       placeholderTextColor={colors.textSecondary}
       {...props}
-      style={[styles.input, variant === 'filled' && styles.filled, props.style]}
+      className={`rounded-button border px-4 py-3.5 font-body text-base text-carbon-500 focus:border-brand-500 ${
+        variant === 'filled' ? 'border-carbon-50 bg-carbon-50' : 'border-line bg-white'
+      }`}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-  },
-  filled: { borderColor: colors.surface, backgroundColor: colors.surface },
-});

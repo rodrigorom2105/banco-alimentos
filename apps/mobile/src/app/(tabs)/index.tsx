@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { usePendingCounts } from '@/features/admin';
@@ -8,7 +8,7 @@ import { useUnreadCount } from '@/features/notifications';
 import { useMyProfile, useMyRoles } from '@/features/profile';
 import { useAuth } from '@/providers';
 import { useRequireAuth } from '@/shared/hooks';
-import { colors, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 // "3 campañas y 1 voluntario por revisar", sin partes en cero y en plural correcto.
 function pendingSummary({
@@ -40,55 +40,58 @@ export default function HomeScreen() {
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : '';
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <ScrollView contentContainerStyle={{ gap: 32, padding: 20 }}>
+        <View className="flex-row items-start justify-between">
           <View>
             {/* Sin sesión no hay nombre que saludar ni notificaciones que mostrar. */}
-            <Text style={styles.greeting}>{session ? 'Hola,' : 'Bienvenido a'}</Text>
-            <Text style={styles.name}>{session ? fullName : 'BAMX Conecta'}</Text>
+            <Text className="font-body text-sm text-carbon-500">
+              {session ? 'Hola,' : 'Bienvenido a'}
+            </Text>
+            <Text className="font-title text-3xl text-carbon-900">
+              {session ? fullName : 'BAMX Conecta'}
+            </Text>
           </View>
           {session && (
             <NotificationBell count={unreadCount} onPress={() => router.push('/notifications')} />
           )}
         </View>
 
-        <View style={styles.cards}>
+        <View className="gap-4">
           {/* El panel va primero y solo para admins: es lo que viene a hacer a la app. El
               resto de su vista es igual a la de cualquier usuario. */}
           {isAdmin && (
             <HomeCard
               title="Panel BAMX"
               description={pendingSummary(counts)}
+              icon="shield-check-outline"
+              tone="carbon"
               onPress={() => router.push('/admin')}
             />
           )}
           <HomeCard
+            title="Donar desde casa"
+            description="Solicita una recolección a domicilio"
+            icon="package-variant-closed"
+            tone="primary"
+            onPress={() => requireAuth('/donation/new')}
+          />
+          <HomeCard
             title="Explorar"
             description="Encuentra campañas cerca de ti"
+            icon="map-marker-radius-outline"
+            tone="accent"
             onPress={() => router.navigate('/explore')}
           />
           <HomeCard
             title="¿Cómo puedo ayudar?"
             description="Conoce las iniciativas en las que puedes apoyar"
+            icon="hand-heart-outline"
+            tone="leaf"
             onPress={() => router.navigate('/help')}
-          />
-          <HomeCard
-            title="Donar desde casa"
-            description="Solicita una recolección a domicilio"
-            onPress={() => requireAuth('/donation/new')}
           />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  container: { padding: spacing.md, gap: spacing.xl * 2 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  greeting: { fontSize: 14, color: colors.text },
-  name: { fontSize: 24, color: colors.text },
-  cards: { gap: spacing.lg },
-});

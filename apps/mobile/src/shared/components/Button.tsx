@@ -1,6 +1,6 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
 
-import { colors, fonts, radius, spacing } from '@/shared/theme';
+import { colors } from '@/shared/theme';
 
 type Props = {
   title: string;
@@ -17,30 +17,19 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary' 
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.button,
-        isOutline && styles.outline,
-        (pressed || isDisabled) && styles.dimmed,
-      ]}
+      className={`items-center rounded-button px-6 py-4 ${
+        isOutline
+          ? 'border-2 border-brand-500 bg-transparent active:bg-brand-50'
+          : 'bg-brand-500 active:bg-brand-600'
+      } ${isDisabled ? 'opacity-60' : ''}`}
     >
       {loading ? (
         <ActivityIndicator color={isOutline ? colors.primary : '#fff'} />
       ) : (
-        <Text style={[styles.text, isOutline && styles.outlineText]}>{title}</Text>
+        <Text className={`font-heading text-base ${isOutline ? 'text-brand-500' : 'text-white'}`}>
+          {title}
+        </Text>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  outline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
-  dimmed: { opacity: 0.6 },
-  text: { color: '#fff', fontFamily: fonts.heading, fontSize: 16 },
-  outlineText: { color: colors.primary },
-});

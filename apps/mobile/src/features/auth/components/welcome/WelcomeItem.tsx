@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Text, View, useWindowDimensions } from 'react-native';
 
 import { useAuth } from '@/providers';
-import { colors, radius, spacing } from '@/shared/theme';
+import { Button } from '@/shared/components';
 
 import type { WelcomeSlide } from '../../types';
 
@@ -25,66 +25,33 @@ export function WelcomeItem({ item, isLastItem }: Props) {
   };
 
   return (
-    <View style={[styles.container, { width }]}>
-      <Image source={item.image} style={[styles.image, { width }]} contentFit="contain" />
+    <View className="flex-1 items-center justify-center" style={{ width }}>
+      <Image
+        source={item.image}
+        style={{ width, height: 300, marginBottom: 24 }}
+        contentFit="contain"
+      />
       {isLastItem ? (
-        <>
-          <Pressable style={styles.button} onPress={() => leave('register')}>
-            <Text style={styles.buttonText}>Crear cuenta</Text>
-          </Pressable>
-          <Pressable style={styles.secondary} onPress={() => leave('explore')}>
-            <Text style={styles.secondaryText}>Explorar sin cuenta</Text>
-          </Pressable>
-          <Text style={styles.question}>
+        <View className="w-full gap-3 px-8">
+          <Button title="Crear cuenta" onPress={() => leave('register')} />
+          <Button title="Explorar sin cuenta" variant="outline" onPress={() => leave('explore')} />
+          <Text className="mt-3 text-center font-body text-base text-carbon-500">
             ¿Ya cuentas con un perfil?{' '}
-            <Text style={styles.link} onPress={() => leave('login')}>
-              Login
+            <Text className="font-heading text-brand-500" onPress={() => leave('login')}>
+              Inicia sesión
             </Text>
           </Text>
-        </>
+        </View>
       ) : (
         <>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text className="mt-6 px-8 text-center font-title text-3xl text-brand-500">
+            {item.title}
+          </Text>
+          <Text className="mt-2 px-12 text-center font-body text-base leading-6 text-carbon-500">
+            {item.description}
+          </Text>
         </>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  image: { height: 300, marginBottom: spacing.lg },
-  button: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-  },
-  buttonText: { color: '#FFFFFF', fontSize: 18, textAlign: 'center' },
-  secondary: {
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  secondaryText: { color: colors.primary, fontSize: 16, textAlign: 'center' },
-  question: { fontSize: 16, color: colors.textSecondary, marginTop: spacing.lg },
-  link: { fontSize: 16, color: colors.primary, fontWeight: 'bold' },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.primary,
-    textAlign: 'center',
-    marginTop: spacing.lg,
-  },
-  description: {
-    fontWeight: '300',
-    color: colors.textSecondary,
-    paddingHorizontal: 64,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-});
