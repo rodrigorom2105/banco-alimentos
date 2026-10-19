@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
 
-import { colors, fonts } from '@/shared/theme';
+import { AppTabBar } from '@/shared/components';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 type TabIconProps = { focused: boolean; color: ColorValue; size: number };
@@ -22,14 +22,11 @@ function TabIcon({
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <AppTabBar {...props} />}
       screenOptions={{
         // Cada pestaña dibuja su propio encabezado.
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
-        tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: colors.border },
-        // Oculta la barra de pestañas mientras el teclado está abierto (Android la subía).
+        // AppTabBar oculta la barra mientras el teclado está abierto (Android la subía).
         tabBarHideOnKeyboard: true,
       }}
     >
