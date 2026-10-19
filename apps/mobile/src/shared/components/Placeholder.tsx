@@ -1,7 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { colors } from '@/shared/theme';
+
+import { Text } from './Text';
 
 // Pantalla informativa para rutas sin contenido todavía o sin permiso.
 export function Placeholder({ title, message }: { title: string; message: string }) {

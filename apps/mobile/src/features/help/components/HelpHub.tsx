@@ -1,6 +1,7 @@
 import { type Href } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { useHelpContext, type HelpContext } from '@/features/profile';
 import { useRequireAuth } from '@/shared/hooks';
 import { colors } from '@/shared/theme';

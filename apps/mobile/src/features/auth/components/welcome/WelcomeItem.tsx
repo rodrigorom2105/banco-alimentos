@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
 import { useAuth } from '@/providers';
-import { Button } from '@/shared/components';
+import { Button, Text } from '@/shared/components';
 
 import type { WelcomeSlide } from '../../types';
 

@@ -7,11 +7,10 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 
-import { FilterChip, Placeholder, StatusBadge } from '@/shared/components';
+import { FilterChip, Placeholder, StatusBadge, Text } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';

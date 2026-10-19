@@ -1,5 +1,6 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { IS_DRAFT, type LegalDocument } from '../legal';

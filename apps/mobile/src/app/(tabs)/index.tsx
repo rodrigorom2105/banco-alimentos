@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Text } from '@/shared/components';
 import { usePendingCounts } from '@/features/admin';
 import { HomeCard, NotificationBell } from '@/features/home';
 import { useUnreadCount } from '@/features/notifications';

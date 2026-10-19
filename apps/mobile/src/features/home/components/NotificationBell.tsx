@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 type Props = {

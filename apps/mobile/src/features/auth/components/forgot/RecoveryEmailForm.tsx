@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Card, Input } from '@/shared/components';
+import { Button, Card, Input, Text } from '@/shared/components';
 
 import { useSendResetCode } from '../../hooks/useSendResetCode';
 

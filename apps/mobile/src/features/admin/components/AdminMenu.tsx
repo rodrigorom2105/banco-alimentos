@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 import { usePendingCounts } from '../hooks/useAdminQueries';

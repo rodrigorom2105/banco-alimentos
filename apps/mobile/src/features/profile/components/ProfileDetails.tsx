@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 import { useMyProfile } from '../hooks/useMyProfile';

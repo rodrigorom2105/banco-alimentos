@@ -4,13 +4,13 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 
+import { Text } from '@/shared/components';
 import { colors, shadows, spacing } from '@/shared/theme';
 import type { Coordinates } from '@/shared/utils';
 

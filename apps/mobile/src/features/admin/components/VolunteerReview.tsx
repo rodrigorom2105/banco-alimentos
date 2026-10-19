@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { WEEKDAY_LABELS } from '@/features/volunteers';
-import { Button, PromptModal, StatusBadge } from '@/shared/components';
+import { Button, PromptModal, StatusBadge, Text } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';

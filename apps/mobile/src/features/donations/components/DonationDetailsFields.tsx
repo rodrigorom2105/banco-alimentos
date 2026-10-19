@@ -1,12 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
   AddressPicker,
+  type AddressValue,
   DateField,
   Field,
   Input,
   Select,
-  type AddressValue,
+  Text,
 } from '@/shared/components';
 import { colors, radius, spacing } from '@/shared/theme';
 import { parseDate, todayISO } from '@/shared/utils';

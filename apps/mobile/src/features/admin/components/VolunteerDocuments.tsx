@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 

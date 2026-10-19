@@ -1,6 +1,8 @@
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator, Pressable } from 'react-native';
 
 import { colors } from '@/shared/theme';
+
+import { Text } from './Text';
 
 type Props = {
   title: string;

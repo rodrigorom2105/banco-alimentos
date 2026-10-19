@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, PromptModal, StatusBadge } from '@/shared/components';
+import { Button, PromptModal, StatusBadge, Text } from '@/shared/components';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 

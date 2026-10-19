@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, PromptModal, StatusBadge } from '@/shared/components';
+import { Button, PromptModal, StatusBadge, Text } from '@/shared/components';
 import { useAuth } from '@/providers';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';

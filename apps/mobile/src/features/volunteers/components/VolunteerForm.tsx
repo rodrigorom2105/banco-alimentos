@@ -1,10 +1,10 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { profileApi, useMyProfile } from '@/features/profile';
 import { useAuth } from '@/providers';
-import { Button, Field, FormScreen, Input, SuccessState } from '@/shared/components';
+import { Button, Field, FormScreen, Input, SuccessState, Text } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, spacing } from '@/shared/theme';
 

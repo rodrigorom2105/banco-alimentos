@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, type ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { useMunicipalities } from '@/shared/hooks';
 import type { Municipality } from '@/shared/lib/catalogs';
@@ -15,6 +15,7 @@ import { normalizeText, type Coordinates } from '@/shared/utils';
 
 import { Select } from '../Select';
 import { AddressMap } from './AddressMap';
+import { Text } from '../Text';
 
 export type AddressValue = {
   address: string;

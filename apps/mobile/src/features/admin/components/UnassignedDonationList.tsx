@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { Button, Placeholder, StatusBadge } from '@/shared/components';
+import { Button, Placeholder, StatusBadge, Text } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';

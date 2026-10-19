@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 
-import { Placeholder } from '@/shared/components';
+import { Placeholder, Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 import { notificationsApi } from '../api/notificationsApi';

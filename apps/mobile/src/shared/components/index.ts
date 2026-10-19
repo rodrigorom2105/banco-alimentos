@@ -12,3 +12,4 @@ export { Screen } from './Screen';
 export { Select, type SelectOption } from './Select';
 export { StatusBadge, type BadgeTone } from './StatusBadge';
 export { SuccessState } from './SuccessState';
+export { Text } from './Text';

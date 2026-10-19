@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { useRef, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 
-import { Button, Card } from '@/shared/components';
+import { Button, Card, Text } from '@/shared/components';
 
 import { useSendResetCode } from '../../hooks/useSendResetCode';
 import { RESET_CODE_LENGTH, useVerifyResetCode } from '../../hooks/useVerifyResetCode';

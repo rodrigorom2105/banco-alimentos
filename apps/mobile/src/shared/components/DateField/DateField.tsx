@@ -1,12 +1,13 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { Button } from '../Button';
 import { dateToValue, formatValue, valueToDate, type DateFieldMode } from './dateValue';
+import { Text } from '../Text';
 
 export type DateFieldProps = {
   value: string | null;

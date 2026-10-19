@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
+import { Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 export type HelpIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];

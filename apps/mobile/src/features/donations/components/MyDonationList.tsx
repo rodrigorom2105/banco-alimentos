@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 
-import { Button, Placeholder, StatusBadge } from '@/shared/components';
+import { Button, Placeholder, StatusBadge, Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 

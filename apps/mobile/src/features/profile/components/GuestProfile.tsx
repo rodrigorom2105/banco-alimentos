@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button } from '@/shared/components';
+import { Button, Text } from '@/shared/components';
 
 // Vista de "Mi cuenta" para quien entró sin sesión.
 export function GuestProfile() {

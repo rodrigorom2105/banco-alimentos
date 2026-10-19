@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, useState, type ReactNode } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CAMPAIGN_TYPE_LABELS, type CampaignType } from '@/features/campaigns';
-import { FilterChip } from '@/shared/components';
+import { FilterChip, Text } from '@/shared/components';
 import { colors, spacing } from '@/shared/theme';
 
 import { applyFilters, type ExploreFilters } from '../filters';

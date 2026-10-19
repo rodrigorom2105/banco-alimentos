@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { MyPickupList } from '@/features/pickups';
-import { Button } from '@/shared/components';
+import { Button, Text } from '@/shared/components';
 import { useMunicipalities } from '@/shared/hooks';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';

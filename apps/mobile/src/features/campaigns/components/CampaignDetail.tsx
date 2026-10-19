@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
-import { Alert, Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, View } from 'react-native';
 
-import { Button } from '@/shared/components';
+import { Button, Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 import { formatDayMonth, formatDistance } from '@/shared/utils';
 

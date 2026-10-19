@@ -1,8 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '@/shared/theme';
+
+import { Text } from './Text';
 
 export type SelectOption<T> = { value: T; label: string };
 

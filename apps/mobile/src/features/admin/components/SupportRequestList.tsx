@@ -5,11 +5,17 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 
-import { Button, FilterChip, Placeholder, PromptModal, StatusBadge } from '@/shared/components';
+import {
+  Button,
+  FilterChip,
+  Placeholder,
+  PromptModal,
+  StatusBadge,
+  Text,
+} from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';

@@ -7,12 +7,11 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 
 import { useAuth } from '@/providers';
-import { Button, FilterChip, StatusBadge } from '@/shared/components';
+import { Button, FilterChip, StatusBadge, Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 import { formatDayMonth } from '@/shared/utils';
 

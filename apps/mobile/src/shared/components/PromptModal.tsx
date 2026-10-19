@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, StyleSheet, View } from 'react-native';
 
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 
 import { Button } from './Button';
 import { Input } from './Input';
+import { Text } from './Text';
 
 type Props = {
   visible: boolean;

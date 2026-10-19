@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Input, Select } from '@/shared/components';
+import { Input, Select, Text } from '@/shared/components';
 import type { ProductCategory } from '@/shared/lib/catalogs';
 import { colors, fonts, radius, spacing } from '@/shared/theme';
 

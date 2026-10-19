@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button } from '@/shared/components';
+import { Button, Text } from '@/shared/components';
 import { colors } from '@/shared/theme';
 
 export function SignupSuccess({ email }: { email?: string }) {

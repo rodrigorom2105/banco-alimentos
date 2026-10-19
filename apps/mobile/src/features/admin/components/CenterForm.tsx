@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
   AddressPicker,
+  type AddressValue,
   Button,
   DateField,
   EMPTY_ADDRESS,
@@ -11,7 +12,7 @@ import {
   FormScreen,
   Input,
   SuccessState,
-  type AddressValue,
+  Text,
 } from '@/shared/components';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { colors, spacing } from '@/shared/theme';
