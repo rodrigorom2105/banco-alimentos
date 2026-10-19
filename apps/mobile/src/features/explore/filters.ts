@@ -25,7 +25,6 @@ const distance = (campaign: ExploreCampaign) => campaign.distanceKm ?? Infinity;
 
 const comparators: Record<SortOption, (a: ExploreCampaign, b: ExploreCampaign) => number> = {
   nearest: (a, b) => distance(a) - distance(b),
-  farthest: (a, b) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity),
   opening: (a, b) => time(a.start_date) - time(b.start_date),
   closing: (a, b) => time(a.end_date) - time(b.end_date),
 };

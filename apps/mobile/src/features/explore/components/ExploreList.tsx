@@ -13,7 +13,6 @@ import { SearchBar } from './SearchBar';
 
 const SORT_OPTIONS: { value: SortOption; label: string; needsLocation?: boolean }[] = [
   { value: 'nearest', label: 'Más cercana', needsLocation: true },
-  { value: 'farthest', label: 'Más lejana', needsLocation: true },
   { value: 'opening', label: 'Fecha de apertura' },
   { value: 'closing', label: 'Fecha de cierre' },
 ];
